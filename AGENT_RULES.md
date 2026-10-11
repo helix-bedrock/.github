@@ -85,8 +85,12 @@ per repo and say how they relate. See [`REPOS.md`](REPOS.md) and
   minor so users one release behind can build.
 - `gofmt`, `go vet` and `golangci-lint` must pass. Tests run with `-race`.
 - Wrap errors with context: `fmt.Errorf("nbt: read compound %q: %w", name, err)`.
-  Library code returns errors; it never panics on bad input and never calls
-  `os.Exit` or `log.Fatal`.
+- **Never panic, anywhere, ever.** No `panic`, `log.Fatal` or `os.Exit` in the
+  engine or any library (tests excepted). Avoid hidden panics too: check slice
+  bounds, nil pointers, and use the two-value form of type assertions and map
+  lookups. Bad input returns an error. Code that calls plugin code recovers
+  panics at that boundary, logs them with the plugin's name, and keeps the
+  server running. CI enforces this with the `forbidigo` linter.
 - No package-level mutable state. Pass dependencies in.
 - Logging uses `log/slog`, passed in by the caller. Libraries never log on their
   own unless given a logger.

@@ -26,7 +26,8 @@ internals.
    Configuration goes through options structs or functional options.
 5. No logging unless the caller passes a `*slog.Logger`. Never print to
    stdout or stderr.
-6. Return errors, never panic on bad input. Define sentinel errors or error
+6. Return errors, **never panic** (see the never-panic rule in
+   [`AGENT_RULES.md`](AGENT_RULES.md)). Define sentinel errors or error
    types callers can check with `errors.Is` / `errors.As`.
 7. Safe for concurrent use, or clearly documented as not safe.
 8. Stay at `v0.x` until the API has been reviewed by 2 core maintainers. After
