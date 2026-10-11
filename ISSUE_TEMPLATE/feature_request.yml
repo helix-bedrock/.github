@@ -1,0 +1,33 @@
+name: Feature request
+description: Suggest a missing vanilla feature or a new capability.
+labels: ["feature"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What do you want?
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - Missing vanilla feature
+        - Plugin API
+        - Performance
+        - Tooling or docs
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: reference
+    attributes:
+      label: References
+      description: Vanilla behaviour, bedrock-samples files, or how other servers implement it.
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Contribution
+      options:
+        - label: I'd like to work on this

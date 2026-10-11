@@ -1,0 +1,42 @@
+name: Bug report
+description: Something is broken or behaves differently from vanilla Bedrock.
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Include logs or screenshots if you have them.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should happen?
+      description: For gameplay bugs, what does vanilla Bedrock (BDS) do?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Start the server with ...
+        2. Join and ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Helix version or commit
+    validations:
+      required: true
+  - type: input
+    id: client
+    attributes:
+      label: Minecraft client version and platform
+      placeholder: 1.26.60, Windows
+  - type: input
+    id: os
+    attributes:
+      label: Server OS and Go version
