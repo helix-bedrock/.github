@@ -7,7 +7,7 @@ People responsible for Helix. Roles are explained in
 
 | Name | GitHub | Areas |
 |---|---|---|
-| TODO: name | @THEBOSS9345 | Everything; project lead and core maintainer |
+| THEBOSS9345 | @THEBOSS9345 | Everything; project lead and core maintainer |
 
 ## Core maintainers
 
