@@ -9,7 +9,7 @@ also open a PR adding yourself for help that was not a code change.
 
 | Name | GitHub | What they helped with |
 |---|---|---|
-| TODO: name | @THEBOSS9345 | Project founder: vision, rules, organization setup |
+| THEBOSS9345 | @THEBOSS9345 | Project founder: vision, rules, organization setup |
 
 Ported code from other projects is credited separately, in each repo's
 `CREDITS.md`.

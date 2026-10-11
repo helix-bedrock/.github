@@ -16,8 +16,8 @@ Discord and events where you represent the project.
 
 ## Reporting
 
-Report problems privately to **TODO: conduct contact email** or by direct
-message to any core maintainer. Reports are kept confidential.
+Report problems privately by direct message to any core maintainer listed in
+[`MAINTAINERS.md`](MAINTAINERS.md). Reports are kept confidential.
 
 ## Enforcement
 
