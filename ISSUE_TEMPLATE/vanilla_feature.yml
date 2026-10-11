@@ -1,0 +1,74 @@
+name: Vanilla feature
+description: A Minecraft feature Helix needs, with everything a contributor needs to build it.
+labels: ["feature", "vanilla-parity"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe one vanilla feature so anyone can pick it up. Link it on the
+        [Vanilla Features board](https://github.com/orgs/helix-bedrock/projects/3).
+  - type: textarea
+    id: what
+    attributes:
+      label: What it is
+      description: The feature in a sentence or two, as a player sees it.
+    validations:
+      required: true
+  - type: textarea
+    id: vanilla
+    attributes:
+      label: How vanilla behaves
+      description: Exact behaviour, with sources (bedrock-samples files, BDS testing, wiki). No guessing.
+    validations:
+      required: true
+  - type: textarea
+    id: references
+    attributes:
+      label: Where to look
+      description: Other projects that already have it, with exact paths. Check PORTING.md before copying.
+      placeholder: |
+        - PowerNukkitX: src/main/java/org/powernukkitx/entity/ai/executor/villager/
+        - Mojang bedrock-samples: behavior_pack/entities/villager_v2.json
+  - type: textarea
+    id: where
+    attributes:
+      label: Where it goes in Helix
+      description: Which repo and package.
+  - type: textarea
+    id: depends
+    attributes:
+      label: Depends on
+      description: Issues or systems that must exist first.
+      placeholder: "#6 AI framework"
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: Checks that prove it works.
+      value: |
+        - [ ] Behaviour matches vanilla (compared with BDS)
+        - [ ] Go tests added
+        - [ ] Tested in game by a human, including multiplayer
+        - [ ] Performance shown with a load test compared to main
+    validations:
+      required: true
+  - type: dropdown
+    id: size
+    attributes:
+      label: Size
+      options:
+        - Small (a day or two)
+        - Medium (about a week)
+        - Large (several weeks)
+    validations:
+      required: true
+  - type: dropdown
+    id: difficulty
+    attributes:
+      label: Difficulty
+      options:
+        - Good first issue
+        - Intermediate
+        - Advanced
+    validations:
+      required: true
