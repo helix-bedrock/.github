@@ -68,8 +68,32 @@ Dragonfly.
 - **A mix** of plain structs, events and properties, each used where it fits.
 - **Everything reachable** (goal 1), without making simple code complicated.
 
-The exact shape is decided in the RFCs, starting from examples written by the
-project lead.
+### Chosen style: plugin struct
+
+The project lead chose the **plugin struct** style (style D on the
+[comparison page](https://claude.ai/artifact/RtFktijAu8bPNFiwYqcr1W)):
+
+- A plugin is one Go struct that embeds `helix.Plugin`.
+- Methods named after events are listeners (`func (s *Skyblock) BlockBreak(e *event.BlockBreak)`).
+- Fields hold the plugin's data, including saved per-player data.
+- A `Setup` method registers anything that is not an event listener: blocks,
+  entities, generators, schedules, priorities and filters.
+- Objects such as players still have their own methods where that is simplest
+  (`p.WritePacket(pk)`, `p.Message("hi")`).
+
+Known weak spots of this style, which the RFCs must solve:
+
+1. **No silent typos.** When a plugin loads, every exported method that looks
+   like a listener but matches no event is an error, with the closest event
+   name suggested. A `go vet`-style checker reports the same at build time.
+2. **Priorities and filters** are set in `Setup` and are as easy to read as the
+   listener itself.
+3. **Runtime changes.** Listeners can also be added and removed while the server
+   runs, for plugins that need it.
+4. **No reflection in hot paths.** Methods are found once when the plugin loads;
+   event dispatch afterwards is as fast as a direct call.
+
+The exact names and shapes are decided in the RFCs.
 
 ### Requirements
 
