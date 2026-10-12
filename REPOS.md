@@ -86,7 +86,10 @@ copy if the repo really needs different rules.
 - Default branch `main`. Squash merging only; delete branches after merge.
 - Branch ruleset on `main`:
   - Require a pull request with at least 1 approval (2 for `helix-api` and
-    license changes), and dismiss stale approvals on new commits.
+    license changes), and dismiss stale approvals on new commits. While the
+    project lead is the only maintainer, approvals are set to 0 (nobody can
+    approve their own pull request); everything else below still applies.
+    Raise it back to 1 when a second maintainer joins.
   - Require CI status checks to pass and the branch to be up to date.
   - Require conversation resolution and signed-off commits (DCO).
   - **Require signed commits** (verified GPG or SSH signature) on every commit,
