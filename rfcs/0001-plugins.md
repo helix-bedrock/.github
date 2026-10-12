@@ -1,6 +1,6 @@
 # RFC 0001: Plugins and listeners
 
-**Status:** Draft. Agreed by the project lead in discussion; not yet accepted.
+**Status:** Accepted by the project lead (2026-10-11).
 **Topics:** 3 (module and plugin system: how plugins register) and the
 listener part of 4 (event system).
 

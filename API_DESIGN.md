@@ -1,8 +1,8 @@
 # API design
 
-**Status: in design.** No topic is accepted yet. Drafts: plugins and listeners
+**Status: in design.** Accepted: plugins and listeners
 ([RFC 0001](rfcs/0001-plugins.md)), core and threads
-([RFC 0002](rfcs/0002-core.md)).
+([RFC 0002](rfcs/0002-core.md)). Engine code may start for those topics only.
 
 The engine's core architecture and plugin API are being designed. Until
 this file says a design is **accepted**, nobody (human or AI) writes engine
@@ -73,7 +73,7 @@ Dragonfly.
 The exact shape is decided in the RFCs, starting from examples written by the
 project lead.
 
-**Plugins (agreed direction, [RFC 0001](rfcs/0001-plugins.md)):** a plugin is a
+**Plugins (accepted, [RFC 0001](rfcs/0001-plugins.md)):** a plugin is a
 struct embedding `helix.Plugin` with a required `Info` (name, description,
 version, dependencies). Listeners are registered only in `Setup`, as
 `r.BlockBreak(fn, helix.Priority(event.High), helix.OnlyBlock(...))`, any number
@@ -159,11 +159,11 @@ These are the topics, not decisions. Each will get its own RFC.
 
 | # | Topic | Status |
 |---|---|---|
-| 1 | Core: tick loop, worlds and dimensions, threading model, region ticking, core-count configuration | Draft: [RFC 0002](rfcs/0002-core.md) |
-| 1a | Concurrency rules for the API: which calls run where, scheduling onto chunk or entity owners, wrong-thread detection | Draft: [RFC 0002](rfcs/0002-core.md) |
+| 1 | Core: tick loop, worlds and dimensions, threading model, region ticking, core-count configuration | Accepted: [RFC 0002](rfcs/0002-core.md) |
+| 1a | Concurrency rules for the API: which calls run where, scheduling onto chunk or entity owners, wrong-thread detection | Accepted: [RFC 0002](rfcs/0002-core.md) |
 | 2 | Registries: blocks, items, entities, behaviours, commands | Not started |
-| 3 | Module and plugin system: how vanilla features and plugins register | Draft: [RFC 0001](rfcs/0001-plugins.md) |
-| 4 | Event system | Listeners drafted in [RFC 0001](rfcs/0001-plugins.md); events not started |
+| 3 | Module and plugin system: how vanilla features and plugins register | Accepted: [RFC 0001](rfcs/0001-plugins.md) |
+| 4 | Event system | Listeners accepted in [RFC 0001](rfcs/0001-plugins.md); events not started |
 | 5 | Entity model: components, physics, damage | Not started |
 | 5a | Property system | Not started |
 | 5b | Scheduler | Not started |
