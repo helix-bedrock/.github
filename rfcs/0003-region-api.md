@@ -33,9 +33,21 @@ r.PlayerJoin(func(e *event.PlayerJoin) {
 })
 ```
 
-Every region-owned object stores its current owner. A method that reads or
-changes region state first compares that owner with the region running the
-current goroutine. This is one comparison, with no lock.
+Every region-owned object stores its current owner. Go has no goroutine-local
+storage, so a method cannot ask which region is calling it. Instead, every
+object handed to plugin code (in an event, a `Run` callback or a `Then`
+callback) carries a **tick token**: the region and tick it was handed out in.
+A method that reads or changes region state checks that token against the
+object's owner: one atomic load and a comparison, no lock (measured at under
+1 ns with no allocation in `helix/owner`).
+
+- An object kept in a plugin's field past its tick still allows `anywhere`
+  calls and `Run`; `owner` calls on it return `ErrStale`. `p.Run(fn)` hands
+  back a fresh object for the new tick.
+- Reading the goroutine ID through runtime internals was rejected: it breaks
+  between Go versions.
+- A token used from a second goroutine during its own tick is not caught by
+  this check; debug mode catches it.
 
 ### 2. Every method says where it may run
 
