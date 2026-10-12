@@ -1,7 +1,8 @@
 # API design
 
 **Status: in design.** No topic is accepted yet. Drafts: plugins and listeners
-([RFC 0001](rfcs/0001-plugins.md)).
+([RFC 0001](rfcs/0001-plugins.md)), core and threads
+([RFC 0002](rfcs/0002-core.md)).
 
 The engine's core architecture and plugin API are being designed. Until
 this file says a design is **accepted**, nobody (human or AI) writes engine
@@ -158,8 +159,8 @@ These are the topics, not decisions. Each will get its own RFC.
 
 | # | Topic | Status |
 |---|---|---|
-| 1 | Core: tick loop, worlds and dimensions, threading model, region ticking, core-count configuration | Not started |
-| 1a | Concurrency rules for the API: which calls run where, scheduling onto chunk or entity owners, wrong-thread detection | Not started |
+| 1 | Core: tick loop, worlds and dimensions, threading model, region ticking, core-count configuration | Draft: [RFC 0002](rfcs/0002-core.md) |
+| 1a | Concurrency rules for the API: which calls run where, scheduling onto chunk or entity owners, wrong-thread detection | Draft: [RFC 0002](rfcs/0002-core.md) |
 | 2 | Registries: blocks, items, entities, behaviours, commands | Not started |
 | 3 | Module and plugin system: how vanilla features and plugins register | Draft: [RFC 0001](rfcs/0001-plugins.md) |
 | 4 | Event system | Listeners drafted in [RFC 0001](rfcs/0001-plugins.md); events not started |
