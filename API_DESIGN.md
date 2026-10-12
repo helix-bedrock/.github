@@ -1,8 +1,10 @@
 # API design
 
-**Status: not started.**
+**Status: in design.** No topic is accepted yet. Drafts: plugins and listeners
+([RFC 0001](rfcs/0001-plugins.md)), core and threads
+([RFC 0002](rfcs/0002-core.md)).
 
-The engine's core architecture and plugin API have not been designed yet. Until
+The engine's core architecture and plugin API are being designed. Until
 this file says a design is **accepted**, nobody (human or AI) writes engine
 packages, public interfaces, registries, the module system or the plugin API.
 Prototypes are fine in a folder named `experiments/` that is never merged.
@@ -70,6 +72,14 @@ Dragonfly.
 
 The exact shape is decided in the RFCs, starting from examples written by the
 project lead.
+
+**Plugins (agreed direction, [RFC 0001](rfcs/0001-plugins.md)):** a plugin is a
+struct embedding `helix.Plugin` with a required `Info` (name, description,
+version, dependencies). Listeners are registered only in `Setup`, as
+`r.BlockBreak(fn, helix.Priority(event.High), helix.OnlyBlock(...))`, any number
+per event. Plugins can be enabled and disabled at runtime, which stops
+everything they registered. Plugin panics are recovered and logged; the owner
+may set a limit after which the plugin is disabled.
 
 ### Requirements
 
@@ -149,11 +159,11 @@ These are the topics, not decisions. Each will get its own RFC.
 
 | # | Topic | Status |
 |---|---|---|
-| 1 | Core: tick loop, worlds and dimensions, threading model, region ticking, core-count configuration | Not started |
-| 1a | Concurrency rules for the API: which calls run where, scheduling onto chunk or entity owners, wrong-thread detection | Not started |
+| 1 | Core: tick loop, worlds and dimensions, threading model, region ticking, core-count configuration | Draft: [RFC 0002](rfcs/0002-core.md) |
+| 1a | Concurrency rules for the API: which calls run where, scheduling onto chunk or entity owners, wrong-thread detection | Draft: [RFC 0002](rfcs/0002-core.md) |
 | 2 | Registries: blocks, items, entities, behaviours, commands | Not started |
-| 3 | Module and plugin system: how vanilla features and plugins register | Not started |
-| 4 | Event system | Not started |
+| 3 | Module and plugin system: how vanilla features and plugins register | Draft: [RFC 0001](rfcs/0001-plugins.md) |
+| 4 | Event system | Listeners drafted in [RFC 0001](rfcs/0001-plugins.md); events not started |
 | 5 | Entity model: components, physics, damage | Not started |
 | 5a | Property system | Not started |
 | 5b | Scheduler | Not started |
@@ -190,8 +200,10 @@ RFCs for these topics must compare against these projects:
    design with Go interfaces, alternatives considered, and how other projects
    (Dragonfly, PowerNukkitX, Allay, Pumpkin) handle the same thing.
 3. Discussion happens on the PR. Prototypes in `experiments/` can back it up.
-4. **2 core maintainers approve** and the PR merges. The table above is updated
-   to **Accepted** with a link.
+4. **2 core maintainers approve** and the PR merges. The table above is
+   updated to **Accepted** with a link. While the project lead is the only
+   maintainer, the lead accepts a design by merging a PR that marks it
+   **Accepted**; merging a draft RFC does not accept it.
 5. Implementation can start for that topic only.
 
 Designs can change after acceptance through a follow-up RFC.
