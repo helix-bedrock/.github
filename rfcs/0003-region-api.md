@@ -119,7 +119,24 @@ a plugin; disabling the plugin releases all its tickets (RFC 0001).
 | `server.CreateWorld(name, opts)` | New world with a chosen generator |
 | `server.OfflinePlayer(uuid).Load()` | Read and change a player who is not online; saved on `Save()` |
 
-`helix.Area` is a chunk, a box of chunks or a radius. Ticket options:
+An **area** (`helix.Area`) is a group of chunks picked out at once by
+describing a shape. Helix works out which chunks are inside it. Nothing is
+stored in the world; it only says "these chunks", so one call works for any
+size instead of separate functions per shape.
+
+```go
+helix.Chunk(10, 4)          // one chunk
+helix.Box(-64, -64, 64, 64) // every chunk in a rectangle between two corners (block coordinates)
+helix.Radius(pos, 100)      // every chunk within 100 blocks of a point
+```
+
+| Thing | Decided by | Size |
+|---|---|---|
+| Chunk | Minecraft | Fixed: 16 × 16 blocks, full height |
+| Area | The plugin | Any shape it describes: one chunk, a box, a radius |
+| Region | Helix, automatically | Changes as players move; merges and splits |
+
+Ticket options:
 `helix.Ticking(false)` (loaded but frozen, for lobbies and arenas between
 games) and `helix.LoadPriority(n)`.
 
