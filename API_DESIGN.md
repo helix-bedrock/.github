@@ -242,7 +242,13 @@ From the ground up, each step tested before the next:
    round-trip byte for byte with it, heightmaps included. Items done
    2026-10-30: BDS's 2,080 items with the network IDs, versions and
    components it sends at join (captured from a real join, helix-data
-   `bds/packets/`). Biomes, entity types and behaviour hooks are next.
+   `bds/packets/`). Biomes, entity types, creative inventory and recipes
+   done 2026-10-30: biome IDs read from the running BDS, every registry
+   packet byte for byte BDS's when untouched and rebuilt when a plugin
+   changes it. Left for later steps: block and item behaviour hooks
+   (with the world), entity engine hooks (with entities), what saved
+   stacks of deleted items load as (with item stacks), and whether BDS
+   re-sends creative and recipe packets the way Helix does.
 3. World in memory: chunks, loading and saving pools, both zones.
 4. Regions and ticking.
 5. Players and entities, replacing the temporary `play.go`.
