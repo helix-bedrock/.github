@@ -250,6 +250,15 @@ From the ground up, each step tested before the next:
    stacks of deleted items load as (with item stacks), and whether BDS
    re-sends creative and recipe packets the way Helix does.
 3. World in memory: chunks, loading and saving pools, both zones.
+   First pass done 2026-10-30 (`helix/world`): chunks owned by one tick
+   goroutine per dimension until regions take over, a worker pool for
+   loads, generation, encoding and saves, BDS's sub-chunk request mode with
+   block hashes, encoded chunks shared and cached, changed chunks saved at
+   the end of each tick from copy-on-write snapshots, flat and void
+   generators. Left for later: hooking up vanilla generation (then
+   client-side generation), the blob cache, block entities in chunks,
+   server-side light, and a BDS capture to check LevelChunk's sub-chunk
+   count and limit and the SubChunk height maps byte for byte.
 4. Regions and ticking.
 5. Players and entities, replacing the temporary `play.go`.
 
