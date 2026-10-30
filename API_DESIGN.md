@@ -266,9 +266,12 @@ From the ground up, each step tested before the next:
    a region that must merge with one still ticking parks until it ends.
    `RunAt` runs code on a chunk's owner, loading it. Left for later: the
    global owner (with the player list, step 5), the tick phases that need
-   blocks and entities, entity hand-off at region edges, the over-budget
+   blocks and entities, the over-budget
    event (a log warning for now), tickets and the rest of RFC 0003, and
-   section size and merge distance chosen by `helix-bench`.
+   section size and merge distance chosen by `helix-bench`. Entity
+   hand-off done 2026-10-30: entities other than players stay in loaded
+   chunks, pass to the region of the chunk they move into at the end of
+   the tick, and unload with their chunk.
 5. Players and entities, replacing the temporary `play.go`. First pass
    done 2026-10-30: `Player` (session, entity, saved data), the global
    owner holding the player list, and `world.Entity` (IDs, position,
