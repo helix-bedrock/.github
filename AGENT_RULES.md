@@ -51,6 +51,15 @@ separate: never make a change that spans repos in one commit; open one change
 per repo and say how they relate. See [`REPOS.md`](REPOS.md) and
 [`SETUP.md`](SETUP.md).
 
+When the engine needs something that belongs in a library (protocol, raknet,
+nethernet, world, worldgen, entity, helix-data), change the library itself
+instead of working around it in the engine.
+
+Build engine systems from how BDS does them, compared with other servers
+(PocketMine-MP, PowerNukkitX, Allay, Endstone), not by copying another
+library such as gophertunnel. Copying a small, clearly correct piece is fine
+when credited; the design comes from vanilla.
+
 ## Hard rules
 
 1. **Licenses.** The engine is GPL-3.0. Libraries are MIT unless they contain
