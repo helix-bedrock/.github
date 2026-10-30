@@ -277,6 +277,9 @@ From the ground up, each step tested before the next:
    2026-10-30: `KeepLoaded(area, ticking)` keeps a box, radius or list of
    chunks loaded, ticking or frozen, until released. Still open from RFC
    0003: load priority, `UnloadChunk`, `KeepTogether` and `KeepApart`.
+   Teleports done 2026-10-30: a player moving more than `MergeDistance`
+   sections from its region goes straight to the region there, with its
+   entity, instead of merging the two.
 5. Players and entities, replacing the temporary `play.go`. First pass
    done 2026-10-30: `Player` (session, entity, saved data), the global
    owner holding the player list, and `world.Entity` (IDs, position,
