@@ -259,7 +259,16 @@ From the ground up, each step tested before the next:
    client-side generation), the blob cache, block entities in chunks,
    server-side light, and a BDS capture to check LevelChunk's sub-chunk
    count and limit and the SubChunk height maps byte for byte.
-4. Regions and ticking.
+4. Regions and ticking. First pass done 2026-10-30 (`helix/world`):
+   regions of 8 by 8 chunk sections, each owning its chunks and players
+   and ticking at 20 TPS on a shared scheduler (earliest deadline first,
+   `TickCores` goroutines), merging and splitting between ticks only;
+   a region that must merge with one still ticking parks until it ends.
+   `RunAt` runs code on a chunk's owner, loading it. Left for later: the
+   global owner (with the player list, step 5), the tick phases that need
+   blocks and entities, entity hand-off at region edges, the over-budget
+   event (a log warning for now), tickets and the rest of RFC 0003, and
+   section size and merge distance chosen by `helix-bench`.
 5. Players and entities, replacing the temporary `play.go`.
 
 ### Still open
