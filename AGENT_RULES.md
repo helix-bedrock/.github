@@ -25,23 +25,25 @@ Four ideas shape everything:
    Anything can be switched off or replaced.
 3. **Data over code.** Blocks, items, recipes, loot, trades, entities and spawn
    rules are loaded from Mojang's and pmmp's data files, not hard-coded.
-4. **Vanilla is the reference.** Behaviour is correct when it matches the
-   official Bedrock Dedicated Server (BDS), not when it compiles and looks
-   plausible.
+4. **Vanilla is the reference, one-to-one.** Behaviour is correct when it
+   matches the official Bedrock Dedicated Server (BDS) exactly, not when it
+   compiles and looks plausible. World generation, redstone, every other
+   vanilla mechanic and the world storage format must be one-to-one with
+   BDS; Helix is lenient only where the project lead says so.
 
-## Current status: pre-design
+## Current status: core design decided, building
 
-**The engine API has not been designed yet.** Until
-[`API_DESIGN.md`](API_DESIGN.md) says a design is accepted:
+The engine core was designed on 2026-10-29; read the "Engine design" section
+of [`API_DESIGN.md`](API_DESIGN.md) before touching the engine or a library
+it uses. It also gives the build order (storage first, then registry, world,
+regions, players).
 
-- Do not create engine packages, public interfaces, plugin APIs, registries or
-  module systems, even if asked to "just start". Explain this and point to
-  `API_DESIGN.md`.
-- You may help write design documents (RFCs), research how other projects solve
-  a problem, and write throwaway prototypes inside an `experiments/` folder that
-  is clearly marked as not for merging.
-- Standalone libraries that do not depend on the engine API (for example `nbt`)
-  may start earlier, but only after a maintainer creates the repo.
+- Build only topics `API_DESIGN.md` marks as decided, in that order.
+- For topics still marked "Not started", do not create public interfaces,
+  even if asked to "just start". Explain this and point to `API_DESIGN.md`.
+  Research and throwaway prototypes in an `experiments/` folder are fine.
+- Designs are decided by the project lead in discussion and recorded in
+  `API_DESIGN.md`. Do not write RFC files unless asked.
 
 ## Workspace layout
 
