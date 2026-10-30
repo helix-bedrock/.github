@@ -79,8 +79,11 @@ when credited; the design comes from vanilla.
    PR. Prefer the standard library.
 5. **No secrets, tokens, personal paths or machine-specific config** in code,
    tests or docs.
-6. **Do not push to `main`, merge PRs, create releases, change repo settings or
-   publish anything.** Open a branch and leave merging to a human.
+6. **Maintainers commit to `main` and push directly; outside contributors
+   open a PR.** When a maintainer runs the agent, commit on `main` and push
+   after each commit, with no feature branches. Otherwise open a branch and
+   leave merging to a human. Never create releases, change repo settings or
+   publish anything unless the maintainer asks.
 7. **Say what you did not check.** If you could not build, test or compare
    against BDS, say so plainly. Never claim untested code works.
 8. **You cannot do in-game testing.** Every change that affects the running

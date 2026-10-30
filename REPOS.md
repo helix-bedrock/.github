@@ -84,17 +84,17 @@ copy if the repo really needs different rules.
 ## Repo settings
 
 - Default branch `main`. Squash merging only; delete branches after merge.
-- Branch ruleset on `main`:
-  - Require a pull request with at least 1 approval (2 for `helix-api` and
-    license changes), and dismiss stale approvals on new commits. While the
-    project lead is the only maintainer, approvals are set to 0 (nobody can
-    approve their own pull request); everything else below still applies.
-    Raise it back to 1 when a second maintainer joins.
-  - Require CI status checks to pass and the branch to be up to date.
-  - Require conversation resolution and signed-off commits (DCO).
-  - **Require signed commits** (verified GPG or SSH signature) on every commit,
-    for everyone including the project lead and admins.
-  - Block force pushes and deletion. No bypass, including admins.
+- Two rulesets on `main`:
+  - **Require PRs**: a pull request (approvals 0 while the project lead is
+    the only maintainer), CI status checks passing on an up-to-date branch,
+    and conversation resolution. Repo maintainers, repo admins and org
+    admins bypass it, so maintainers push to `main` directly; everyone else
+    goes through a PR.
+  - **Protect main**, with no bypass for anyone:
+    - Signed-off commits (DCO).
+    - **Require signed commits** (verified GPG or SSH signature) on every
+      commit, for everyone including the project lead and admins.
+    - Block force pushes and deletion.
 - Enable: Discussions (on `helix` and `.github`), private vulnerability
   reporting, secret scanning with push protection, Dependabot alerts and
   security updates.
