@@ -269,7 +269,16 @@ From the ground up, each step tested before the next:
    blocks and entities, entity hand-off at region edges, the over-budget
    event (a log warning for now), tickets and the rest of RFC 0003, and
    section size and merge distance chosen by `helix-bench`.
-5. Players and entities, replacing the temporary `play.go`.
+5. Players and entities, replacing the temporary `play.go`. First pass
+   done 2026-10-30: `Player` (session, entity, saved data), the global
+   owner holding the player list, and `world.Entity` (IDs, position,
+   rotation, owned by its region). Players see each other within BDS's
+   57-chunk disc (AddPlayer, RemoveActor), get each other's movement as
+   MovePlayer built once per tick, and are saved on leave into their BDS
+   data. Left for later: inventory, abilities and game modes, AddPlayer's
+   synched data checked against BDS, BDS's unique IDs for new players,
+   the rest of the join packets, mobs and the `entity` library, encoding
+   a packet once for every connection, and moving teleports.
 
 ### Still open
 
