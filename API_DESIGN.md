@@ -239,8 +239,10 @@ From the ground up, each step tested before the next:
    (register, replace, delete), the frozen table with network hashes and
    a live-swappable property table read from BDS 1.26.60 at runtime
    (helix-data `bds/block_properties.json`). Two BDS worlds still
-   round-trip byte for byte with it, heightmaps included. Items, biomes,
-   entity types and block behaviour hooks are next.
+   round-trip byte for byte with it, heightmaps included. Items done
+   2026-10-30: BDS's 2,080 items with the network IDs, versions and
+   components it sends at join (captured from a real join, helix-data
+   `bds/packets/`). Biomes, entity types and behaviour hooks are next.
 3. World in memory: chunks, loading and saving pools, both zones.
 4. Regions and ticking.
 5. Players and entities, replacing the temporary `play.go`.
