@@ -235,7 +235,12 @@ From the ground up, each step tested before the next:
    Done 2026-10-29: two worlds BDS 1.26.60 saved round-trip byte for byte;
    `KV`, `WorldStore` and `PlayerStore` in `world/mcdb`. Not yet checked in
    game.
-2. Registry in `helix`, blocks first.
+2. Registry in `helix`, blocks first. Blocks done 2026-10-29: `Setup`
+   (register, replace, delete), the frozen table with network hashes and
+   a live-swappable property table read from BDS 1.26.60 at runtime
+   (helix-data `bds/block_properties.json`). Two BDS worlds still
+   round-trip byte for byte with it, heightmaps included. Items, biomes,
+   entity types and block behaviour hooks are next.
 3. World in memory: chunks, loading and saving pools, both zones.
 4. Regions and ticking.
 5. Players and entities, replacing the temporary `play.go`.
