@@ -232,6 +232,9 @@ From the ground up, each step tested before the next:
 
 1. Storage in the `world` library: the full BDS 1.26.60 key inventory, every
    key one-to-one, the pluggable store interfaces with LevelDB as default.
+   Done 2026-10-29: two worlds BDS 1.26.60 saved round-trip byte for byte;
+   `KV`, `WorldStore` and `PlayerStore` in `world/mcdb`. Not yet checked in
+   game.
 2. Registry in `helix`, blocks first.
 3. World in memory: chunks, loading and saving pools, both zones.
 4. Regions and ticking.
