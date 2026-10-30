@@ -1,13 +1,16 @@
 # API design
 
-**Status: in design.** Accepted: plugins and listeners
-([RFC 0001](rfcs/0001-plugins.md)), core and threads
-([RFC 0002](rfcs/0002-core.md)). Engine code may start for those topics only.
+**Status: core design decided, building has started.** Accepted: plugins and
+listeners ([RFC 0001](rfcs/0001-plugins.md)), core and threads
+([RFC 0002](rfcs/0002-core.md)), and the engine design decided by the project
+lead on 2026-10-29 ([Engine design](#engine-design-decided-2026-10-29) below:
+registry, world in memory, regions, players and entities, events, storage).
+Engine code may be written for those topics, in the build order given there.
 
-The engine's core architecture and plugin API are being designed. Until
-this file says a design is **accepted**, nobody (human or AI) writes engine
-packages, public interfaces, registries, the module system or the plugin API.
-Prototypes are fine in a folder named `experiments/` that is never merged.
+Topics still marked "Not started" in the table at the end are not designed
+yet. Nobody (human or AI) writes public interfaces for them until this file
+says they are decided. Prototypes are fine in a folder named `experiments/`
+that is never merged.
 
 ## Goals (agreed)
 
@@ -61,6 +64,185 @@ only the fast core, and hard-codes its own rules. Both are first-class.
    - `cores: 1` must remain a fully supported mode for debugging and exact
      reproduction.
 
+## Engine design (decided 2026-10-29)
+
+Decided by the project lead in design discussions on 2026-10-29. The engine
+was restarted from scratch in `helix` the same day; the old Dragonfly-based
+engine is not part of it. Where this section and an older RFC disagree, this
+section wins.
+
+### Rule zero: one-to-one with BDS
+
+- **Vanilla behaviour is one-to-one with BDS** (currently 1.26.60), not
+  "close enough": world generation, redstone (required), every other
+  vanilla mechanic, and the world storage format. Helix may only be lenient
+  where the project lead says so, such as Helix's own APIs and internals
+  that do not change any result.
+- Where regions or parallel work could change a vanilla result (redstone
+  update order, scheduled ticks, hoppers), Helix follows BDS's order inside
+  a region. This replaces RFC 0002's "the tick order is Helix's own".
+- **No felt lag, even with 400 players in one spot.** Every design choice is
+  checked against that case and proven with `helix-bench`: 400 fake players
+  in one spot for 10 minutes, no tick over 50 ms, 99% of ticks well under,
+  run on every engine change.
+
+### 1. Registry
+
+- **One `Setup` builder at boot.** Vanilla, built-in features and plugins all
+  register through it; there is no back door.
+- **Frozen at boot:** everything the client is told once when it joins
+  (blocks and their states, items, biomes, entity types). Transports open
+  only after the registry is frozen.
+- **Changeable at runtime:** recipes, creative inventory and commands
+  (re-sent to online players; to be confirmed against BDS per packet), and
+  server-only data (loot, trades, spawn rules).
+- Registering an existing name overrides it, and the log says which plugin
+  replaced what. Plugins may **delete** vanilla content at boot; saved data
+  that still holds it loads a replacement (blocks default to
+  `minecraft:unknown`, as BDS; biomes default to plains), and world
+  generation places the replacement.
+- **Blocks:** every block state is a dense `uint32` ID. Properties
+  (hardness, friction, light, ...) live in one flat table per state;
+  network hashes are computed once. Behaviour is a set of small optional
+  hooks, resolved at boot so unused hooks cost nothing.
+- **Live changes:** behaviour and properties of any type, vanilla included,
+  can be changed while running. Tables are copied, edited and swapped
+  atomically; each region picks up the change at the start of its next tick.
+  Plugins can **replace** a behaviour or **wrap** it (run code before or
+  after vanilla's); wraps stack in plugin load order.
+- **Hooks cover everything BDS blocks and items can do** (its C++ block and
+  item hooks, JSON components and Script API events): placing, breaking,
+  using, ticking, neighbours, entities inside or on a block, redstone,
+  pistons and falling, liquids and waterlogging, shapes, block entities,
+  multi-block parts, item use, use-on, charging and releasing, eating,
+  mining speed, hitting, projectiles, dispensers, durability and inventory
+  ticks. Numbers are properties, actions are behaviour.
+- **Item stacks:** a plain stack is about 8 bytes with no allocation; names,
+  lore, enchantments, NBT and **namespaced plugin data** (saved with the
+  item, never sent to the client) live in an optional extra part.
+- **Biomes:** frozen at boot, custom biomes allowed. **Entity types:** name,
+  definition (components, groups, events, parsed by the `entity` library)
+  and Helix's engine hooks (spawn, hurt, death and drops, interact, tick).
+  AI and components stay in the `entity` library. The player is the
+  `minecraft:player` entity type.
+
+### 2. World in memory
+
+- Chunks use the `world` library's format (paletted sub-chunks, two block
+  layers, half-byte light with shared empty and full arrays), improved in the
+  library: the registry's tables replace the old name-and-property lookups,
+  and light is server-only (clients light the world themselves).
+- **Two zones per player.** The simulation zone (BDS `tick-distance`,
+  default 4 chunks) is fully loaded, owned by a region and ticked. The view
+  zone (BDS `view-distance`) is loaded or generated on a worker pool,
+  encoded, sent, then **released**; an optional compressed cache with a
+  memory budget keeps busy areas ready. Memory follows the simulated area,
+  not world size or view distance.
+- **Client-side chunk generation** is on by default for vanilla worlds, as in
+  BDS: the server builds the inner part of the view and the client draws
+  vanilla terrain beyond it. Measured on BDS: about 3.3 times fewer chunk
+  packets. Off automatically for custom generators.
+- A chunk always has exactly one owning region and moves between regions by
+  pointer. Loading and saving run on worker pools; a region never waits.
+  Saving copies only changed sub-chunks at the end of a tick. Each chunk
+  keeps its encoded network form and shares it with every player.
+
+### 3. Regions and ticking
+
+RFC 0002 stands (regions that merge and split, per-region 20 TPS on a worker
+pool, global owner, async teleports), with these additions:
+
+- Regions are built from simulation zones only, so spread-out players give
+  many small regions.
+- **Crowded regions work in parallel inside the tick:** a per-player phase
+  runs every player's own input (movement, inventory, UI) at once, and mob
+  AI thinks in parallel; anything that changes the shared world is applied
+  afterwards in a fixed order, so results are the same on any core count.
+- **Encode once, send to many:** each entity update is built once per tick
+  and the same bytes go to every viewer. Compression and encryption run off
+  the region.
+- Entities that leave a region during a tick are handed to the new owner at
+  the end of the tick. Chunk loads never block: an entity stops at an
+  unloaded chunk.
+- Packets are flushed at the end of each tick, not on a timer. Near the tick
+  budget, non-gameplay work (chunk sending, cosmetic packets) slows first;
+  anything that changes gameplay is only reduced when the owner turns it on.
+- Tiles inside a region are designed for but built only if the benchmark
+  shows crowds still need them.
+
+### 4. Players and entities
+
+- **A player is three parts:** the session (connection, identity, send
+  queue, what the client has; safe from anywhere), the entity (position,
+  health, inventory, game mode; owned by the region it stands in) and the
+  profile (permissions and server-wide facts; owned by the global owner,
+  read through a published copy).
+- Every entity belongs to its chunk's region, which keeps an entity list and
+  a per-chunk grid for nearby queries. Helix implements the `entity`
+  library's world and mob interfaces per region; each region has its own
+  seeded random so results do not depend on core count.
+- **Visibility and join follow BDS:** entities are shown within BDS's
+  57-chunk disc around the player; the join sends BDS's packet sequence in
+  BDS's order, with the large registry packets built once at boot and shared.
+- **Anti-cheat is optional:** Helix's own anti-cheat module, off by default,
+  switchable. BDS's default position correction is separate from it.
+
+### 5. Events
+
+RFC 0001 stands, with these additions:
+
+- **Priorities are named by when they run:** `First`, `Early`, `Normal`,
+  `Late`, `Last`, then `Monitor` (read-only, after everything). The last
+  listener to run has the final say.
+- Almost every event can be cancelled and changed.
+- **No allocations:** an event with no listeners is never built. Each worker
+  reuses its own event structs (nested events use a small stack per type),
+  so firing allocates nothing after warm-up. Listeners must not keep an event
+  after they return. Dispatch benchmarks must show 0 allocations; player
+  movement must handle about 50,000 events a second.
+- A hook and its events run in order: "before" event (can cancel or change),
+  the type's hook, then "after" event (read-only).
+- **Listeners run in parallel by default** where the event fires in a
+  parallel phase; `helix.Sequential()` runs a listener one call at a time.
+  Plugins get per-player data that needs no locks.
+- Packet hooks run on the player's network goroutine and never touch the
+  world.
+
+### 6. Storage
+
+- **One LevelDB per world, exactly like BDS,** is the default: chunks,
+  entities, players and world data in the same database, every key,
+  format and read rule one-to-one with BDS, so any BDS world opens in Helix
+  and any Helix world opens in BDS. Helix-only data sits under keys BDS
+  ignores.
+- Players are stored as BDS does: `player_server_<uuid>` holds the data,
+  `player_<id>` records map each login ID to it.
+- **Storage is pluggable.** The world store and the player store are separate
+  interfaces (both default to the same LevelDB), so a network can keep
+  players in one shared database. A backend can implement plain key-value
+  calls (BDS keys and encoding are reused) or take over the typed calls
+  completely.
+- Store calls never block a region. A chunk and its entities and block
+  entities are written in one batch. Bad data is logged, never a panic.
+- Each plugin gets its own namespaced key-value store in the same backend.
+
+### Build order
+
+From the ground up, each step tested before the next:
+
+1. Storage in the `world` library: the full BDS 1.26.60 key inventory, every
+   key one-to-one, the pluggable store interfaces with LevelDB as default.
+2. Registry in `helix`, blocks first.
+3. World in memory: chunks, loading and saving pools, both zones.
+4. Regions and ticking.
+5. Players and entities, replacing the temporary `play.go`.
+
+### Still open
+
+The full event list, custom events, the entity visibility API (leaning
+towards `CanSee`, `HideActor`, `ShowActor`), commands and permissions, the
+server config file, and BDS's autosave timing.
+
 ## API style (direction)
 
 Helix has its own API style. It is not a copy of Bedrock's Script API or of
@@ -101,9 +283,9 @@ layers; advanced plugins are never blocked by them.
 gophertunnel and go-raknet are references to port from (see `PORTING.md`), not
 dependencies, because they do not expose the low-level access below.
 
-**No built-in anti-cheat.** Helix ships no anti-cheat of its own. Servers and
-plugins build their own, so everything an anti-cheat needs must be exposed and
-replaceable: movement and its validation, combat and reach, block
+**Anti-cheat is optional.** Helix will have its own anti-cheat module, off by
+default and switchable, and servers and plugins can build their own instead,
+so everything an anti-cheat needs must be exposed and replaceable: movement and its validation, combat and reach, block
 interactions, inventory transactions, packet timing, and per-player packet and
 transport hooks.
 
@@ -159,21 +341,21 @@ These are the topics, not decisions. Each will get its own RFC.
 
 | # | Topic | Status |
 |---|---|---|
-| 1 | Core: tick loop, worlds and dimensions, threading model, region ticking, core-count configuration | Accepted: [RFC 0002](rfcs/0002-core.md); API shape in draft [RFC 0003](rfcs/0003-region-api.md) |
+| 1 | Core: tick loop, worlds and dimensions, threading model, region ticking, core-count configuration | Accepted: [RFC 0002](rfcs/0002-core.md) and [Engine design](#engine-design-decided-2026-10-29) sections 2-3; API shape in draft [RFC 0003](rfcs/0003-region-api.md) |
 | 1a | Concurrency rules for the API: which calls run where, scheduling onto chunk or entity owners, wrong-thread detection | Accepted: [RFC 0002](rfcs/0002-core.md); API shape in draft [RFC 0003](rfcs/0003-region-api.md) |
-| 2 | Registries: blocks, items, entities, behaviours, commands | Not started |
+| 2 | Registries: blocks, items, entities, behaviours, commands | Accepted: [Engine design](#engine-design-decided-2026-10-29) section 1 (commands still open) |
 | 3 | Module and plugin system: how vanilla features and plugins register | Accepted: [RFC 0001](rfcs/0001-plugins.md) |
-| 4 | Event system | Listeners accepted in [RFC 0001](rfcs/0001-plugins.md); events not started |
-| 5 | Entity model: components, physics, damage | Not started |
+| 4 | Event system | Accepted: [RFC 0001](rfcs/0001-plugins.md) and [Engine design](#engine-design-decided-2026-10-29) section 5; the event list and custom events are still open |
+| 5 | Entity model: components, physics, damage | Hosting accepted: [Engine design](#engine-design-decided-2026-10-29) sections 1 and 4; components, AI and physics live in the `entity` library |
 | 5a | Property system | Not started |
 | 5b | Scheduler | Not started |
 | 6 | AI framework: memory, sensors, behaviours, controllers, pathfinding | Not started |
 | 7 | Data loading: `bedrock-samples` and BedrockData formats | Not started |
 | 8 | External plugins: WASM host, API surface, sandboxing | Not started |
-| 9 | Storage: LevelDB worlds, player data | Not started |
+| 9 | Storage: LevelDB worlds, player data | Accepted: [Engine design](#engine-design-decided-2026-10-29) section 6 |
 | 10 | Versioning: multi-version protocol support (decided: support as many versions as possible through the `protocol` library, translating packets per client version), API compatibility promise | Not started |
 | 11 | Custom content: normal Minecraft resource packs are supported and sent to clients as-is. Custom entities, blocks and items use Helix's own system (through the API), not Bedrock behaviour packs. Whether that system also has a JSON format is to be discussed later | Not started |
-| 12 | Login and accounts: Xbox Live authentication with many verification checks that the connection is a real client (login chain signatures, token expiry, identity and XUID consistency, client data, protocol behaviour), studied from how other servers do it (references: PocketMine-MP login verification, PowerNukkitX Xbox login handling); offline mode also available for the server owner to choose. Every check is exposed and can be extended or replaced through the API. Skins included | Not started |
+| 12 | Login and accounts: Xbox Live authentication with many verification checks that the connection is a real client (login chain signatures, token expiry, identity and XUID consistency, client data, protocol behaviour), studied from how other servers do it (references: PocketMine-MP login verification, PowerNukkitX Xbox login handling); offline mode also available for the server owner to choose. Every check is exposed and can be extended or replaced through the API. Skins included | Built from BDS 1.26.60's login checks: `protocol/auth` (token checks, clock correction), `nethernet` (server identity key), `helix/network` (login steps as named, replaceable steps); offline mode is the `OnlineMode` setting |
 | 13 | UI: forms, scoreboards, boss bars, titles. All exposed through the API; designed when that phase is reached | Not started |
 | 14 | Server networks: proxy support and moving players between servers. Undecided whether to support WaterdogPE-style proxies or build a Helix proxy | Not started |
 | 15 | Plugin permissions: what a WASM plugin may do by default | Not started (open question) |
@@ -193,6 +375,11 @@ RFCs for these topics must compare against these projects:
 | [MultiPaper](https://github.com/MultiPaper/MultiPaper) | Java | Scaling one world across several server processes |
 
 ## How a design gets accepted
+
+While the project lead is the only maintainer, the lead decides designs in
+discussion and they are recorded in this file, as in
+[Engine design](#engine-design-decided-2026-10-29). RFC files are optional.
+Once there are more core maintainers, this process applies:
 
 1. Someone opens a Discussion on `helix-bedrock/.github` proposing the topic.
 2. They write an RFC as a Markdown file in an `rfcs/` folder in this repo
