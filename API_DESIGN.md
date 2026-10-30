@@ -267,13 +267,16 @@ From the ground up, each step tested before the next:
    `RunAt` runs code on a chunk's owner, loading it. Left for later: the
    global owner (with the player list, step 5), the tick phases that need
    entities, the over-budget
-   event (a log warning for now), tickets and the rest of RFC 0003, and
+   event (a log warning for now), the rest of RFC 0003, and
    section size and merge distance chosen by `helix-bench`. Entity
    hand-off done 2026-10-30: entities other than players stay in loaded
    chunks, pass to the region of the chunk they move into at the end of
    the tick, and unload with their chunk. Block ticks done 2026-10-30:
    random ticks and both of BDS's tick queues per chunk, saved with it;
-   block behaviour comes through a `BlockTicker`.
+   block behaviour comes through a `BlockTicker`. Chunk tickets done
+   2026-10-30: `KeepLoaded(area, ticking)` keeps a box, radius or list of
+   chunks loaded, ticking or frozen, until released. Still open from RFC
+   0003: load priority, `UnloadChunk`, `KeepTogether` and `KeepApart`.
 5. Players and entities, replacing the temporary `play.go`. First pass
    done 2026-10-30: `Player` (session, entity, saved data), the global
    owner holding the player list, and `world.Entity` (IDs, position,
