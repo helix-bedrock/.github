@@ -267,8 +267,11 @@ From the ground up, each step tested before the next:
    `RunAt` runs code on a chunk's owner, loading it. Left for later: the
    global owner (with the player list, step 5), the tick phases that need
    entities, the over-budget
-   event (a log warning for now), the rest of RFC 0003, and
-   section size and merge distance chosen by `helix-bench`. Entity
+   event (a log warning for now) and the rest of RFC 0003. Section size
+   and merge distance chosen 2026-10-30 with an in-process benchmark of
+   400 fake players (`BenchmarkRegionLayout`, until `helix-bench` exists):
+   8 by 8 chunks and 1 section, the defaults; to be measured again once
+   gameplay adds work to the tick. Entity
    hand-off done 2026-10-30: entities other than players stay in loaded
    chunks, pass to the region of the chunk they move into at the end of
    the tick, and unload with their chunk. Block ticks done 2026-10-30:
