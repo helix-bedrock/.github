@@ -3,6 +3,9 @@
 Thanks for helping. These rules apply to every repo in the `helix-bedrock`
 organization unless a repo's own `CONTRIBUTING.md` says otherwise.
 
+New here? [`FIRST_CONTRIBUTION.md`](FIRST_CONTRIBUTION.md) walks you through it step by step,
+from installing the tools to a merged PR.
+
 ## Before you start
 
 - **Small fixes** (typos, obvious bugs, missing tests): open a PR directly.

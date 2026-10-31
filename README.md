@@ -11,6 +11,7 @@ Organization-wide files for [Helix](https://github.com/helix-bedrock).
 | File | Covers |
 |---|---|
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Workflow, reviews, DCO, licensing |
+| [`FIRST_CONTRIBUTION.md`](FIRST_CONTRIBUTION.md) | Your first contribution, step by step |
 | [`AI_POLICY.md`](AI_POLICY.md) | Using AI tools on Helix |
 | [`AGENT_RULES.md`](AGENT_RULES.md) | Rules AI coding agents follow in every repo |
 | [`REPOS.md`](REPOS.md) | Creating, naming, configuring and releasing repos |

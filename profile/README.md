@@ -56,6 +56,7 @@ plugins use, and even the engine's fundamentals can be replaced.
 
 ### Get involved
 
+- [Your first contribution, step by step](https://github.com/helix-bedrock/.github/blob/main/FIRST_CONTRIBUTION.md)
 - [Contributing guide](https://github.com/helix-bedrock/.github/blob/main/CONTRIBUTING.md)
 - [API design status](https://github.com/helix-bedrock/.github/blob/main/API_DESIGN.md)
 - [Code of conduct](https://github.com/helix-bedrock/.github/blob/main/CODE_OF_CONDUCT.md)
