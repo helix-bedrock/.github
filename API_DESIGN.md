@@ -208,6 +208,13 @@ RFC 0001 stands, with these additions:
 - Packet hooks run on the player's network goroutine and never touch the
   world.
 
+Chests, ender chests and drops (lead asked 2026-11-02, built in `player`): events fire before
+anything happens and may cancel or change it (`OnChestOpen`, `OnChestItem`, `OnChestPair`,
+`OnChestSpill`, `OnBlockBreak`, `OnBlockDrops`, `OnExperience`). `OnChestItem` fires per slot once
+a request has passed BDS's checks, and cancelling it refuses the whole request, because one request
+also changes the player's slots and refusing part of it would lose or double items. Methods
+(`Chest.SetItem` and so on) fire no events, so a listener can call them without looping.
+
 ### 6. Storage
 
 - **One LevelDB per world, exactly like BDS,** is the default: chunks,
