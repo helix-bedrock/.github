@@ -214,6 +214,9 @@ anything happens and may cancel or change it (`OnChestOpen`, `OnChestItem`, `OnC
 a request has passed BDS's checks, and cancelling it refuses the whole request, because one request
 also changes the player's slots and refusing part of it would lose or double items. Methods
 (`Chest.SetItem` and so on) fire no events, so a listener can call them without looping.
+Crafting (2026-11-02, built in `crafting` and `player`) works the same way: `OnCraft` fires once a
+request's recipe passes BDS's checks, before any item is used, and may change the results or refuse
+the request. Recipes are the `Registry.Crafting` packet, so changing it changes what can be crafted.
 
 ### 6. Storage
 
