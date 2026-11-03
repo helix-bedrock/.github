@@ -221,6 +221,8 @@ Smithing recipes (lead's design, 2026-11-02): every vanilla recipe is there by d
 may clear them all, remove one, remove those for an item, or change one, at boot or while running
 (`EditSmithing`, `Smithing`). `OnSmith` changes or refuses one use of the table. Every other recipe
 works the same way through `EditRecipes` and `Recipes`, whichever block makes it.
+`Player.EditRecipes` takes recipes away from one player only; the server refuses what that player
+does not have. The rules last until the player leaves.
 
 ### 6. Storage
 
