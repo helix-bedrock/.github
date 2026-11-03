@@ -217,6 +217,9 @@ also changes the player's slots and refusing part of it would lose or double ite
 Crafting (2026-11-02, built in `crafting` and `player`) works the same way: `OnCraft` fires once a
 request's recipe passes BDS's checks, before any item is used, and may change the results or refuse
 the request. Recipes are the `Registry.Crafting` packet, so changing it changes what can be crafted.
+Smithing recipes (lead's design, 2026-11-02): every vanilla recipe is there by default, and a plugin
+may clear them all, remove one, remove those for an item, or change one, at boot or while running
+(`EditSmithing`, `Smithing`). `OnSmith` changes or refuses one use of the table.
 
 ### 6. Storage
 
