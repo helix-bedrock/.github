@@ -9,7 +9,7 @@ retired.
 
 - `nbt`, `leveldb`, `worldgen`, `pathfinding` and `wasm-host` are useful to
   other projects, so they get their own repos.
-- The AI framework, redstone, villagers, commands and other gameplay stay as
+- The AI framework, villagers, commands and other gameplay stay as
   packages inside `helix`. They change together with the engine.
 
 When in doubt, start as a package inside `helix`. Moving a package out later is
@@ -32,6 +32,7 @@ Only core maintainers create repos. Propose a new repo in a Discussion on
 | `leveldb` | Library | MIT | Bedrock world format |
 | `worldgen` | Library | GPL-3.0 | Terrain, biomes, structures (contains ported GPL code) |
 | `pathfinding` | Library | GPL-3.0 if ported, else MIT | Mob pathfinding |
+| `redstone` | Library | MIT | Redstone circuits, one-to-one with BDS; the lead split it out of `helix` on 2026-11-03 |
 | `wasm-host` | Library | MIT | WASM plugin runtime |
 | `helix-cli` | Tool | GPL-3.0 | Command-line tool |
 | `helix-bench` | Tool | GPL-3.0 | Load and performance testing: bot players, scenarios, tick/memory/CPU reports, branch vs `main` comparison |

@@ -54,7 +54,7 @@ per repo and say how they relate. See [`REPOS.md`](REPOS.md) and
 [`SETUP.md`](SETUP.md).
 
 When the engine needs something that belongs in a library (protocol, raknet,
-nethernet, world, worldgen, entity, helix-data), change the library itself
+nethernet, world, worldgen, entity, redstone, helix-data), change the library itself
 instead of working around it in the engine.
 
 Build engine systems from how BDS does them, compared with other servers

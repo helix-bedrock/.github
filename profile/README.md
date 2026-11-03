@@ -41,6 +41,7 @@ plugins use, and even the engine's fundamentals can be replaced.
 | [world](https://github.com/helix-bedrock/world) | Worlds read and written byte for byte as BDS does |
 | [worldgen](https://github.com/helix-bedrock/worldgen) | Vanilla world generation, one-to-one with BDS |
 | [entity](https://github.com/helix-bedrock/entity) | Mob AI and pathfinding, one-to-one with BDS |
+| [redstone](https://github.com/helix-bedrock/redstone) | Redstone circuits, one-to-one with BDS |
 | [helix-data](https://github.com/helix-bedrock/helix-data) | Game data from Mojang's files and the scripts that build it |
 | [multiversion](https://github.com/helix-bedrock/multiversion) | Support for older Minecraft versions |
 
