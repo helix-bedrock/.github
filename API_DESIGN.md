@@ -310,11 +310,31 @@ From the ground up, each step tested before the next:
    the rest of the join packets, mobs and the `entity` library, encoding
    a packet once for every connection, and moving teleports.
 
+### Commands (decided 2026-11-05)
+
+- **No namespace prefix.** Commands are internal: a plugin's `home` is
+  `/home`, never `plugin:home`. Vanilla and plugin commands are equal and
+  go through the same API; registering a taken name replaces it, and the
+  log says which owner replaced which.
+- **Two ways to declare, one result.** Typed structs, one per overload,
+  whose fields are the arguments and whose `Run` method runs it (the main
+  way), and a `Builder` for commands made while running, such as from a
+  config file.
+- **Suggestions as BDS's client shows them.** Fixed enums, soft enums
+  changed live, per-player commands and options (players get only what they
+  may use), BDS's own lists prebuilt with constants (Item and Block with
+  icons, entity types, effects, game rules and the rest), and plugin enum
+  types.
+- Also: middleware around every command, BDS's error messages and
+  permission levels, commands added or removed while running.
+- Every player's state can be read from any region (`Player.State`), so
+  selectors see players everywhere.
+
 ### Still open
 
 The full event list, custom events, the entity visibility API (leaning
-towards `CanSee`, `HideActor`, `ShowActor`), commands and permissions, the
-server config file, and BDS's autosave timing.
+towards `CanSee`, `HideActor`, `ShowActor`), permissions beyond BDS's
+command levels, the server config file, and BDS's autosave timing.
 
 ## API style (direction)
 
@@ -416,7 +436,7 @@ These are the topics, not decisions. Each will get its own RFC.
 |---|---|---|
 | 1 | Core: tick loop, worlds and dimensions, threading model, region ticking, core-count configuration | Accepted: [RFC 0002](rfcs/0002-core.md) and [Engine design](#engine-design-decided-2026-10-29) sections 2-3; API shape in draft [RFC 0003](rfcs/0003-region-api.md) |
 | 1a | Concurrency rules for the API: which calls run where, scheduling onto chunk or entity owners, wrong-thread detection | Accepted: [RFC 0002](rfcs/0002-core.md); API shape in draft [RFC 0003](rfcs/0003-region-api.md) |
-| 2 | Registries: blocks, items, entities, behaviours, commands | Accepted: [Engine design](#engine-design-decided-2026-10-29) section 1 (commands still open) |
+| 2 | Registries: blocks, items, entities, behaviours, commands | Accepted: [Engine design](#engine-design-decided-2026-10-29) section 1; commands decided 2026-11-05 (see Commands) |
 | 3 | Module and plugin system: how vanilla features and plugins register | Accepted: [RFC 0001](rfcs/0001-plugins.md) |
 | 4 | Event system | Accepted: [RFC 0001](rfcs/0001-plugins.md) and [Engine design](#engine-design-decided-2026-10-29) section 5; the event list and custom events are still open |
 | 5 | Entity model: components, physics, damage | Hosting accepted: [Engine design](#engine-design-decided-2026-10-29) sections 1 and 4; components, AI and physics live in the `entity` library |
