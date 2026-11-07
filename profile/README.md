@@ -17,19 +17,34 @@ Helix aims to be the first, and to run any kind of server.
 Every mechanic is BDS's by default and can be replaced. Every feature is a module on the same API
 plugins use, and even the engine's fundamentals can be replaced.
 
-> **Status: building.** The core design is decided and the engine is being built. Players can
-> already join, spawn in a BDS world, see each other and use their inventory.
+> **Status: building** (as of 2026-11-07). The core design is decided and the engine is being
+> built. Full checklist: [helix/STATUS.md](https://github.com/helix-bedrock/helix/blob/main/STATUS.md).
 > Follow along in [Discussions](https://github.com/orgs/helix-bedrock/discussions).
 
-### What we're working on
+### What works (checked in game)
 
-- **Core player gameplay** in [helix](https://github.com/helix-bedrock/helix): breaking, placing
-  and using blocks, item drops, water and lava flow, and containers. Networking, login, world
-  storage, the registry and multi-core regions are done.
-- **World generation** in [worldgen](https://github.com/helix-bedrock/worldgen): all three
-  dimensions are generated as BDS does; a refinement pass for the last small differences is next.
-- **Mob AI** in [entity](https://github.com/helix-bedrock/entity): researching BDS's components,
-  goals and pathfinding to port them one-to-one.
+- Joining (NetherNet, Xbox Live login, encryption, resource packs), BDS worlds opened and saved in
+  BDS's own format, the registry, chunks, and regions ticking on many cores.
+- The inventory, chests, shulker boxes, furnaces, crafting and smithing tables, all from BDS's
+  code. Their basic use is checked; not every case yet.
+- Player combat, health, hunger and totems.
+- Redstone and rails basically fully work (not yet compared with BDS side by side).
+- Bows and arrows.
+
+### Built, not finished or not checked yet
+
+- Block ticks: many blocks' tick behaviour is in, not all.
+- Snowballs, eggs and ender pearls are built but do not work in game yet.
+- Vanilla terrain generation is hooked up for the overworld; all three dimensions are generated
+  in [worldgen](https://github.com/helix-bedrock/worldgen), with a refinement pass still to come.
+- The command system and `/give`, riding, the day cycle, beds, banners, signs, fire and more are
+  written from BDS's code and waiting for in-game tests.
+
+### Not started
+
+- Mobs: [entity](https://github.com/helix-bedrock/entity) has most of BDS's components mapped, but
+  the engine does not run mobs yet.
+- Weather, potions, crossbows, tridents, fishing, brewing, most vanilla commands, forms and UI.
 
 ### Repositories
 
