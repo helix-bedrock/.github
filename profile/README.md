@@ -30,13 +30,13 @@ plugins use, and even the engine's fundamentals can be replaced.
 - Player combat, health, hunger and totems.
 - Redstone and rails basically fully work (not yet compared with BDS side by side).
 - Bows and arrows.
+- Vanilla terrain generation in the overworld; all three dimensions are generated in
+  [worldgen](https://github.com/helix-bedrock/worldgen), with a refinement pass still to come.
 
 ### Built, not finished or not checked yet
 
 - Block ticks: many blocks' tick behaviour is in, not all.
 - Snowballs, eggs and ender pearls are built but do not work in game yet.
-- Vanilla terrain generation is hooked up for the overworld; all three dimensions are generated
-  in [worldgen](https://github.com/helix-bedrock/worldgen), with a refinement pass still to come.
 - The command system and `/give`, riding, the day cycle, beds, banners, signs, fire and more are
   written from BDS's code and waiting for in-game tests.
 
