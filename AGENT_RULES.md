@@ -118,6 +118,37 @@ when credited; the design comes from vanilla.
   must produce the same results with 1 core and with many.
 - Comments explain *why*, not what. Exported identifiers get doc comments.
 
+## Performance and the garbage collector
+
+Go's garbage collector is not generational: every allocation adds to the next
+collection's work, and marking time grows with the number of pointers in
+memory. Java forgives careless allocation; Go does not. Everything you write
+must keep the collector's work small, so the server never lags because of it.
+
+- **No allocations in steady state on hot paths** (every tick, per packet, per
+  block, per entity, per player). No `fmt`, string building, closures that
+  capture, `append` to fresh slices, maps or boxing into interfaces there.
+  Reuse buffers owned by the caller or the region; use `sync.Pool` only for
+  things that really come and go.
+- **Keep big data flat and pointer-free.** Chunks, block storage, light, height
+  maps and similar bulk data are plain arrays of values, which the collector
+  never scans. Prefer slices of structs over slices of pointers, and IDs or
+  indices over pointers between entities, regions and chunks. No
+  `map[K]*T` for large sets when a slice indexed by ID works.
+- **Know what grows with players and entities.** Anything that scales with
+  players times players (movement fan-out, visibility) or with entity count
+  gets a benchmark at 400 players or thousands of entities, with
+  `b.ReportAllocs()`, and must report 0 allocs per op in steady state.
+- **Measure, don't guess.** Before calling a system done, check its cost in the
+  load tests (or a benchmark until those exist): tick time per phase,
+  allocations, collector CPU share, heap size. Use `pprof`
+  (`-memprofile`, `-cpuprofile`) to find where allocations come from.
+- **Don't fight the runtime.** No disabling the collector, no `unsafe` tricks
+  to hide pointers, no manual memory management. `GOGC` and `GOMEMLIMIT`
+  are for server owners to tune, not for code to set.
+- **Say what you did not measure.** If a change touches a hot path and you did
+  not benchmark it, say so, as with in-game testing.
+
 ## Commits and PRs
 
 - Conventional commits: `feat(nbt): ...`, `fix(world): ...`, `docs: ...`.
