@@ -52,6 +52,9 @@ Helix is **in early development and not ready for real servers yet**. The road t
 - The plugin API.
 - These lists only cover what we know about: there are surely mechanics we have not found yet that still need to be added.
 
+We are **actively looking for contributors**. If you know Go or Minecraft's mechanics, there is plenty to add: start with
+[your first contribution](https://github.com/helix-bedrock/.github/blob/main/FIRST_CONTRIBUTION.md).
+
 ### Repositories
 
 | Repo | What it is |
