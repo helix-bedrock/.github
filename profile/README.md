@@ -50,6 +50,7 @@ Helix is **in early development and not ready for real servers yet**. The road t
   beacons, conduits; most vanilla commands, forms and UI.
 - Every mob behaviour checked one-to-one against BDS, and load testing at 400 players.
 - The plugin API.
+- These lists only cover what we know about: there are surely mechanics we have not found yet that still need to be added.
 
 ### Repositories
 
