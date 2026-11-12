@@ -17,34 +17,39 @@ Helix aims to be the first, and to run any kind of server.
 Every mechanic is BDS's by default and can be replaced. Every feature is a module on the same API
 plugins use, and even the engine's fundamentals can be replaced.
 
-> **Status: building** (as of 2026-11-07). The core design is decided and the engine is being
-> built. Full checklist: [helix/STATUS.md](https://github.com/helix-bedrock/helix/blob/main/STATUS.md).
+> **Status: building** (as of 2026-11-12). Live progress, by feature: [helixbedrock.com/progress](https://helixbedrock.com/progress/).
 > Follow along in [Discussions](https://github.com/orgs/helix-bedrock/discussions).
 
-### What works (checked in game)
+Helix is **in early development and not ready for real servers yet**. The road to a stable release:
 
-- Joining (NetherNet, Xbox Live login, encryption, resource packs), BDS worlds opened and saved in
-  BDS's own format, the registry, chunks, and regions ticking on many cores.
-- The inventory, chests, shulker boxes, furnaces, crafting and smithing tables, all from BDS's
-  code. Their basic use is checked; not every case yet.
-- Player combat, health, hunger and totems.
-- Redstone and rails basically fully work (not yet compared with BDS side by side).
-- Bows and arrows.
-- Vanilla terrain generation in the overworld; all three dimensions are generated in
-  [worldgen](https://github.com/helix-bedrock/worldgen), with a refinement pass still to come.
+1. ✅ Engine core: networking, world storage, regions, terrain (done, Oct to Nov 2026).
+2. 🟡 Every vanilla mechanic, one-to-one with BDS (in progress, aiming for summer 2027).
+3. ⬜ Plugin API and custom content (2027 to 2028).
+4. ⬜ Testing on real servers, then a stable release (around 2028).
 
-### Built, not finished or not checked yet
+### What works
 
-- Block ticks: many blocks' tick behaviour is in, not all.
-- Snowballs, eggs and ender pearls are built but do not work in game yet.
-- The command system and `/give`, riding, the day cycle, beds, banners, signs, fire and more are
-  written from BDS's code and waiting for in-game tests.
+- Joining (NetherNet, Xbox Live login, encryption, resource packs), BDS worlds in BDS's own format,
+  vanilla terrain, the Nether and the End, light, weather, and regions ticking on many cores.
+- Players: movement, health, hunger, combat, shields, totems, elytra, portals, beds.
+- Inventory and every common container and work block: chests, furnaces, hoppers, crafting,
+  smithing, enchanting, anvils.
+- Redstone, pistons, observers, TNT, rails and minecarts.
+- Farming and plants, falling blocks, fire, fishing, bundles, fireworks, goat horns.
+- Mobs spawn, fight back, wear equipment and drop loot.
 
-### Not started
+### Built, being tested in game
 
-- Mobs: [entity](https://github.com/helix-bedrock/entity) has most of BDS's components mapped, but
-  the engine does not run mobs yet.
-- Weather, potions, crossbows, tridents, fishing, brewing, most vanilla commands, forms and UI.
+- Potions, status effects, brewing, crossbows, tridents, the mace, wind charges.
+- Breeding, leads, mob spawners, spawn eggs, name tags, mobs saved with the world.
+- Armour stands, candles, cakes, campfires, barrels, stonecutters.
+
+### Still to build
+
+- Villages, villagers and trading; raids; the Ender Dragon and the Wither; structure loot; maps,
+  beacons, conduits; most vanilla commands, forms and UI.
+- Every mob behaviour checked one-to-one against BDS, and load testing at 400 players.
+- The plugin API.
 
 ### Repositories
 
