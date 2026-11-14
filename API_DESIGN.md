@@ -226,18 +226,14 @@ does not have. The rules last until the player leaves.
 
 ### 6. Storage
 
-- **One LevelDB per world, exactly like BDS,** is the default: chunks,
-  entities, players and world data in the same database, every key,
-  format and read rule one-to-one with BDS, so any BDS world opens in Helix
-  and any Helix world opens in BDS. Helix-only data sits under keys BDS
-  ignores.
-- Players are stored as BDS does: `player_server_<uuid>` holds the data,
+- **Superseded 2026-11-13:** worlds are stored in Helix's own format, and BDS
+  worlds are converted in and out losslessly. See "World data redesign",
+  sections 4 to 6. (Was: one LevelDB per world, exactly like BDS.)
+- Player records keep BDS's content: `player_server_<uuid>` holds the data,
   `player_<id>` records map each login ID to it.
 - **Storage is pluggable.** The world store and the player store are separate
-  interfaces (both default to the same LevelDB), so a network can keep
-  players in one shared database. A backend can implement plain key-value
-  calls (BDS keys and encoding are reused) or take over the typed calls
-  completely.
+  interfaces (both default to the Helix format), so a network can keep
+  players in one shared database.
 - Store calls never block a region. A chunk and its entities and block
   entities are written in one batch. Bad data is logged, never a panic.
 - Each plugin gets its own namespaced key-value store in the same backend.
@@ -335,6 +331,407 @@ From the ground up, each step tested before the next:
 The full event list, custom events, the entity visibility API (leaning
 towards `CanSee`, `HideActor`, `ShowActor`), permissions beyond BDS's
 command levels, the server config file, and BDS's autosave timing.
+
+## World data redesign (DECIDED 2026-11-13, building)
+
+**Status: decided by the project lead on 2026-11-13 as a full rewrite, not a
+patch of the inherited model, and the top priority.** It includes Helix's own
+world format on disk (section 4) with built-in backups (section 5) and a
+converter library to and from BDS worlds (section 6). It replaces parts of
+"World in memory" (2), "Storage" (6) and RFC 0003's load priority. The
+targets and the open questions at the end are still to be settled. Research, code references and
+sources: `memory/research-storage-redesign.md` (workspace, not in a repo).
+
+### Why
+
+A test world built with `/chestbomb` (1,020 dropped shulker boxes of books at
+1 MB each, up to 223 per chunk; chests of 300 MB per chunk) showed that Helix
+assumes world data is small:
+
+- **A chunk is all or nothing.** Every load reads terrain, block entities, tick
+  queues and every entity record, decoded into NBT maps, before the client gets
+  anything, even for view-zone chunks that are then thrown away. The client
+  never needed entities in the chunk packet.
+- **One queue for everything.** Loads, generation, encodes, saves and cold
+  chest reads share one FIFO per worker: no priority, no cancelling, and one
+  huge save blocks every chunk behind it.
+- **One lock between saving and loading.** A flush holds a lock for as long as
+  it writes, and every chunk load waits for it.
+- **Data is copied and re-encoded at every layer.** Entities and block entities
+  live as pointer-rich NBT maps; every save encodes every sub chunk and every
+  entity again, changed or not.
+- **Limits are scattered.** Load gate, cache budget, save delay and item caps
+  each have their own number; nothing knows the total memory or I/O in flight.
+
+Paper's chunk system (Moonrise), Folia, vanilla Java since 1.17, Valence and
+Pumpkin all separate terrain from entities, read in stages, and schedule work
+in prioritised, cancellable queues with rate limits. Helix should too.
+
+### Targets
+
+With the hostile world (below) and 20 bots joining at once:
+
+- A player joins at once: spawn within 3 seconds, the first chunk within 1
+  second, the nearest three rings within 2 seconds.
+- Memory does not follow world contents: peak heap at most 300 MB above the
+  same scenario on a plain world.
+- No tick over 50 ms is caused by loading or saving, and no chunk load ever
+  waits for a save or flush of another chunk.
+- Nothing is lost: every entity and block entity round-trips through save and
+  reload, and two BDS worlds still round-trip byte for byte.
+
+The numbers are first guesses, to be set by the lead after step 0 measures
+today's code.
+
+### 1. Data model: shells with lazy payloads
+
+A loaded chunk is a set of **parts**, each with its own state and memory cost:
+
+| Part | Holds | Form |
+| --- | --- | --- |
+| Terrain | sub chunks, biomes, height map, light | flat arrays, no pointers (as today) |
+| Network | encoded chunk packet, per sub chunk | bytes, shared, in a budgeted cache |
+| Block entity shells | position, type, the few fields used every tick (a chest's slot counts for comparators, a furnace's state) | small structs |
+| Block entity payloads | everything else | raw NBT bytes in memory, or on disk only |
+| Entity shells | unique ID, type, position, rotation, box, what visibility and saving need; for an item, its stack header | small structs |
+| Entity payloads | the rest of the record (inventories, nested items, books) | raw NBT bytes in memory, or on disk only |
+| Tick queues | scheduled and random ticks | as today |
+
+- **Raw by default.** A record is kept as the bytes it was stored as (one
+  pointer-free slice) and decoded only where the engine reads it. An entity
+  type Helix does not run is never decoded at all and saves by copying its
+  bytes. This generalises `nbt.Raw` nested items and cold chests to every
+  entity and block entity.
+- **Payloads can go cold** (`ColdBlockEntity` for all, and for entities): a
+  payload unused for a while and stored current is dropped from memory and
+  read back on the load worker when needed, never on the tick.
+- **Not an ECS, for now.** The `entity` library, plugin API and regions are
+  built on entity values; shells give the flat, scannable storage that is most
+  of an ECS's benefit. Regions may later keep shells in per-type arrays behind
+  the same API if the benchmarks ask for it.
+
+### 2. Staged chunk loading, terrain first
+
+Each chunk moves through states, owned by its region:
+
+1. **Terrain**: terrain part read and decoded, light worked out, network form
+   built and sent. This is all the view zone ever loads. Block entity network
+   data (signs, chest pairing, banners) comes from the shells.
+2. **Blocks ready**: block entity shells and tick queues loaded.
+3. **Full**: entity shells loaded and live entities built. Only a Full chunk
+   ticks, so no rule ever runs with a chunk's entities missing (vanilla Java's
+   MC-211601: pressure plates turned off because entities came after ticks).
+4. **Payloads**: read one by one when used (a chest opened, an entity hurt),
+   never as a whole.
+
+- The simulation zone asks for Full, the view zone for Terrain. A chunk moving
+  from view to simulation zone only reads what it lacks.
+- An entity walking into a chunk whose entities are not loaded yet joins a
+  "transient" list, merged with the stored ones when they load or when the
+  chunk saves (as Moonrise does).
+- Building live entities from shells is time-budgeted per region tick (for
+  example 2 ms); the rest waits for the next tick, and the chunk counts as
+  Full only when done.
+- A chunk's entity and block entity shells are one Objects record (section
+  4), read in one go; payloads stay on disk until used.
+
+### 3. Work queues and priorities
+
+- **Two pools.** An I/O pool (a few goroutines, only store reads and writes)
+  and a CPU pool (decode, encode, generate, light, compress).
+  Region ticks stay on the tick scheduler. No pool ever waits on a tick, and
+  no tick ever waits on a pool.
+- **One task record per chunk and part**, not per worker: at most one pending
+  read and one pending write each. Writes before the I/O runs collapse to the
+  newest snapshot; a read that finds a pending write uses its data; a task
+  nobody wants any more is cancelled. Order per chunk comes from this record,
+  so jobs no longer have to be pinned to one worker.
+- **Priorities** (highest first), recomputed when a player moves:
+  1. what a join or a teleport waits on (the player's own chunk and sim zone);
+  2. view-zone terrain, nearest ring first;
+  3. payload reads a player waits on (opening a chest);
+  4. saves of unloading chunks (memory is freed only after them);
+  5. auto-saves, cooling, compaction.
+- **Fair shares.** Each queue gets a time slice, as Moonrise's balanced pool
+  does, so saves always make progress and loads are never starved by them.
+- **Per-player limits**, as Paper: concurrent loads (default a fifth of the
+  view area, at least 5), loads and sends per second with short bursts
+  allowed. One player flying fast cannot take the pools from the others.
+
+### 4. The Helix world format (decided 2026-11-13)
+
+**Decided by the project lead on 2026-11-13:** Helix stops storing worlds in
+BDS's LevelDB and uses its own format, `.hx` (for Helix). BDS worlds are
+converted in and out by a converter library (section 6). One-to-one with BDS
+now means: every BDS world converts to Helix, every Helix world converts to
+BDS, and a world converted there and back without being played comes back
+identical. Helix's own LevelDB engine (`world/lsm`, built first) stays as the
+converter's BDS reader and writer.
+
+The lead's rules for it:
+
+1. **Reads and writes are as fast as the disk allows, with no allocations** in
+   the steady state.
+2. **Size never slows it down.** A 100 GB or 1 TB world reads and writes as
+   fast as a small one, and the server starts as fast.
+3. **Backups are built in and live:** made while the server runs, without
+   stopping anything, and usable by plugins (section 5).
+4. **A converter library**, BDS to Helix and Helix to BDS, seamless. Helix
+   gets a live converter on top of it later (section 6).
+
+Byte-level layouts go in `world/hx/FORMAT.md`, written with the code.
+
+**Files on disk:**
+
+```
+worlds/<name>/
+  level.dat            BDS's own file, unchanged
+  world.hx             format version, settings
+  blocks.hx            the world's block table
+  journal/             save commits not yet checkpointed
+  overworld/r.<x>.<z>.hx   one region file per 32×32 chunks
+  nether/  end/  (and other dimensions)
+  players.hx           every player
+  level.hx             maps, scoreboard, villages, portals, structures,
+                       ticking areas and every other world-wide BDS key
+```
+
+**The record store** (`world/hx/store`). Every `.hx` file is a record store:
+records plus an index of where each one is. One engine serves regions,
+players, level data and the block table.
+
+- **A record** has a header (type, compression, key, the save round that wrote
+  it, length), its body and a CRC-32C checksum. Records describe themselves,
+  so a lost index can be rebuilt by scanning the file.
+- **Saved data is never written over.** A new version goes to free space; the
+  old one is reused only after the commit that replaced it, and only once no
+  reader or backup can still see it (epochs).
+- **The index** is flat, pointer-free sorted arrays in memory. On disk it is one
+  index record plus two superblock slots (round number and checksum), written
+  alternately at checkpoints, so a torn write can never lose both.
+- **64-bit offsets and lengths everywhere:** no limit on a record, a chunk or a
+  file. Java's Anvil caps a chunk at 1 MB.
+- **Keys.** In a region: the chunk within the region, the part, a payload
+  number. In `players.hx` and `level.hx`: the BDS key name.
+- **Compression per record:** zstd from `klauspost/compress` (already a
+  dependency), with an ID byte so more (zstd dictionaries) can be added later
+  without converting worlds. A stored record can be copied without being
+  decompressed (backups, the converter, an entity moving to another region).
+- **Unknown record types are kept and copied, never dropped.** Every file
+  starts with a magic number and a format version.
+
+**Saving: rounds and the journal.** Changes are tracked per part. A save round
+runs every 5 seconds (as BDS flushes), off the tick:
+
+1. Encode the changed parts on the CPU pool.
+2. Write them into free space.
+3. Force them to disk.
+4. Append one commit to the journal (every new location, with a checksum) and
+   force it to disk. This is the moment the round counts.
+5. Later, a checkpoint writes the new locations into each file's index and the
+   journal is trimmed.
+
+- **A round lands whole or not at all,** across every file: an item moved from
+  a chest to a player's inventory is saved in both or neither, so a crash
+  cannot duplicate items.
+- **Bytes written are about the bytes changed** (around 1.0 to 1.1 times), with
+  no compaction. A file that ends up mostly free space is repacked on its own,
+  rarely.
+- **The journal is bounded** (checkpoints by size and time), so starting a
+  world reads at most that much, whatever the world's size.
+- **Forcing to disk is on by default** (survives power cuts). Off, a world
+  survives a crash of the server but not of the machine, like BDS's default.
+
+**Reading.**
+
+- An index lookup, then one positioned read into the caller's buffer. Any
+  number of reads run in parallel, with no lock and no wait on a save: a
+  reader takes the current index and epoch in one step.
+- Each read sees one finished save round, never half of one.
+- A chunk that does not exist costs no read at all.
+- No block cache and no in-memory table: the operating system's file cache
+  does caching, outside the Go heap. The store's own memory is a few MB: an
+  index cache with a byte budget and a bounded set of open files.
+
+**Chunk parts.** A chunk is stored as parts, each its own record, read and
+written on its own, written next to each other so a whole chunk is usually one
+or two reads:
+
+| Part | Holds | Read when |
+| --- | --- | --- |
+| Terrain | BDS chunk version, finalisation, sub chunks, biomes, height map, light | the chunk comes into view |
+| Objects | every block entity and entity shell | the chunk enters the simulation zone |
+| Ticks | scheduled and random block ticks | with Objects |
+| Extra | every other BDS chunk key (border blocks, spawn areas, blending, structure starts...), byte for byte | when the engine or the converter asks |
+| Payloads | the big fields cut out of shells, one record each | when used: a chest opened, an item picked up, an export |
+
+- **Shells are cut by size, not by type:** a block entity or entity record's
+  fields over a threshold (to start: 4 KB) move into payload records, largest
+  first. A normal chest stays one small shell. No per-type code, so new mobs,
+  new blocks and plugin data work too.
+- **Terrain encoding:** the packed block words are the same bytes BDS and the
+  client use. The palette is numbers into the world's block table, not NBT
+  names: loading is a number lookup, sending is a swap to network hashes. Light
+  is stored as a cache (missing or outdated: worked out again).
+- **The block table** (`blocks.hx`) holds every block state the world uses,
+  once, with the exact bytes BDS wrote for it, so an export writes BDS's
+  palette entries back unchanged. A Minecraft update that renames a block
+  fixes its row once at start-up, not every palette on every load.
+- **NBT stays where it fits:** entities, block entities, players and level
+  data are little-endian NBT as in BDS, plus zstd. Their data is open-ended
+  (every mob differs, plugins add fields), every Bedrock tool reads NBT, and
+  conversion is a copy. Terrain is the one place a custom layout wins.
+
+**Speed and allocations (lead's rule 1).**
+
+- The store moves bytes; it never decodes NBT. Reads fill a buffer the caller
+  owns; zstd decoders and encoders are pooled and write into reused buffers;
+  index lookups are binary searches over flat arrays; save rounds reuse their
+  buffers.
+- Benchmarks with `b.ReportAllocs()` must show 0 allocations per operation for
+  index lookups, warm part reads, terrain decode, and a save round in the
+  steady state.
+- Estimate, to be measured: a normal chunk loads in 0.1 to 0.4 ms of CPU on one
+  core; an NVMe disk serves tens of thousands of chunk parts a second.
+- Storage never runs on the tick. A slow disk makes chunks arrive later; it
+  never makes a tick late.
+
+**Size (lead's rule 2).**
+
+- Finding a chunk is the same work in any world: the region file follows from
+  the coordinates, then one index search and one read.
+- Memory does not grow with the world: the index cache and open files are
+  bounded.
+- No compaction: a 1 TB LevelDB keeps rewriting its data in the background;
+  this format writes each change about once.
+- Start-up reads the bounded journal, never the world. A 1 TB world is tens of
+  thousands of region files, opened on demand.
+
+### 5. Backups (decided 2026-11-13)
+
+- **Live and built in.** A backup pins the current saved state (an epoch):
+  records it can see are not reused until the copy is done, while the server
+  keeps playing and saving into other free space. The copy is paced so it never
+  slows loading. The only cost: files may grow a little while it runs.
+- **API in `world/hx`** for Helix and plugins: back up to a target (a folder, an
+  archive, or a plugin's own writer, such as cloud storage), incremental since
+  an earlier backup, with progress and a rate limit. Restore a whole world
+  (offline), restore chunks or an area into a running world, and open a backup
+  read-only as a world (for rollback tools).
+- **Incremental:** every record carries the save round that wrote it, so a
+  backup copies only what changed since the last one.
+- **A backup is itself a compact Helix world** (or a delta on top of one).
+  Records are copied as stored, with their checksums, never re-encoded.
+- **In Helix:** the plugin API and events, a `backup` command, and BDS's
+  `save hold`, `save query` and `save resume`, so BDS backup tools keep working.
+
+### 6. The converter library (decided 2026-11-13)
+
+`world/convert`, BDS to Helix and Helix to BDS:
+
+- **Whole worlds and single pieces.** Functions convert a whole world, and also
+  one chunk, one player or one level record, so Helix's later live converter
+  (converting chunks as they load) uses the same code.
+- **BDS side:** `world/lsm` for LevelDB, the BDS key and value knowledge of
+  `world/mcdb`.
+- **Lossless.** Every BDS key becomes a Helix record or is kept with its exact
+  bytes (Extra, `level.dat`, `level.hx`). A world converted there and back
+  without being played comes back identical; chunks that were played on come
+  back in the current BDS format, as BDS writes them.
+- **Streams, in parallel per region,** never holding a world in memory, with
+  progress and an option to convert back in memory and compare.
+- **Tested** on real BDS worlds (identical round trip) and by running BDS on
+  converted worlds.
+
+### 7. Saves that do not encode unchanged data
+
+- **Only changed parts are written.** A chunk whose entities moved writes its
+  Objects part, not its terrain.
+- **Per sub chunk:** a dirty bit; the terrain part is rebuilt from the stored
+  bytes of unchanged sub chunks plus the changed ones encoded. The network form
+  is also rebuilt per changed sub chunk.
+- **Per entity and block entity:** a dirty bit; an unchanged shell is copied as
+  stored bytes, and a payload is never rewritten unless it changed. Mobs that
+  move save on the save round; item frames, armour stands and dropped shulker
+  boxes that sit still are never rewritten.
+- What is stored after a save is exactly what a full re-encode would write:
+  skipping a write never changes what a load or an export reads.
+
+### 8. Limits
+
+One `Limits` part of the server config, Helix's own beyond BDS, with defaults
+that normal play never reaches:
+
+- **Size:** what one shulker box or bundle may hold (2 MB, today), what one
+  entity or block entity record may hold when items are added to it, book size
+  as BDS allows. Limits refuse what a player adds; they never drop data that
+  is already stored.
+- **Count, optional:** per entity type, how many a chunk saves (Paper's
+  `entity-per-chunk-save-limit`), off by default; item merging as BDS does it.
+- **Memory:** one memory governor with accounts (network cache, warm payloads,
+  pending writes, loads in flight). Over budget it evicts caches first, then
+  cools payloads, then slows new loads (back-pressure); it never stalls a tick.
+  It replaces the load gate, the cache budget and the save-cost delay.
+- **Time:** per region tick, a budget for arrivals and warmed payloads.
+- **I/O:** bytes in flight and bytes per second, separately for foreground
+  (loads, payload reads) and background (saves, backups, repacks).
+- **Network:** how many block entities one chunk packet carries before the
+  rest are sent as separate block entity packets (Paper uses 750); to be
+  checked against what the Bedrock client accepts.
+
+### 9. The hostile-world test (the gate for every step)
+
+A `sim` scenario, `hostile`, that builds the worst case in game and on disk at
+a size set by a flag (kept small by default; full size only when the lead
+asks, under the 10 GB cap):
+
+- chunks of chests stuffed with books (up to 300 MB a chunk), dropped shulker
+  boxes of books (up to 223 a chunk), thousands of mobs, item frames and armour
+  stands, pistons moving full chests;
+- the server is stopped and started again so everything loads from disk;
+- 20 bots join at the centre at once, then walk and fly outwards.
+
+It reports join time (spawn, first chunk, nearest rings), heap and collector
+share over time, the longest tick and late ticks, load latency per ring and
+per priority, time any load spent waiting on another chunk's save or a flush,
+bytes read and written, and a check that every entity and block entity is
+still there after the restart. Every step below must meet the targets on this
+test, must not make the plain-world scenarios worse, must keep two BDS worlds
+round-tripping byte for byte through the converter, and needs the lead's
+in-game test.
+
+### Migration, in order
+
+0. **Measure.** Build the `hostile` scenario and its report; record today's
+   numbers. Set the targets from them.
+1. **BDS LevelDB engine** (`world/lsm`): done 2026-11-13; now the converter's
+   BDS side.
+2. **Record store** (`world/hx/store`): records, index, journal, save rounds,
+   recovery, epochs; kill and power-cut tests; zero-allocation benchmarks.
+3. **Helix world format** (`world/hx`): chunk parts, block table, players,
+   level data, the world provider Helix uses.
+4. **Converter library** (`world/convert`): both directions; real BDS worlds
+   round-trip identically; BDS opens converted worlds.
+5. **Backups** (`world/hx`, then the Helix API and commands).
+6. **Queues** (`helix/world`): I/O and CPU pools, task records per chunk and
+   part, priorities, fair shares, cancelling, per-player limits.
+7. **Staged loading:** Terrain / Blocks ready / Full; the view zone reads
+   terrain only; arrival budget per tick; transient entity lists.
+8. **Shells and raw payloads** (`helix/world`, `player`): entity and block
+   entity records kept raw, shells decoded, payloads cold.
+9. **Saves without re-encoding.**
+10. **Limits and the memory governor**, replacing the scattered limits.
+
+Steps 2 to 5 are in order; 6 can be built alongside them; 7 needs 3 and 6; 8
+and 9 need 7.
+
+### Open questions for the lead
+
+- Does BDS 1.26.60 tick a chunk before its actors are loaded, or load them
+  with the chunk? (Needs an IDA check; it decides whether "Full" waits for
+  entities exactly as BDS does.)
+- Are the targets above right?
+- Optional per-type entity save limits: offered, off by default?
 
 ## API style (direction)
 

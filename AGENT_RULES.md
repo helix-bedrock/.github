@@ -27,9 +27,11 @@ Four ideas shape everything:
    rules are loaded from Mojang's and pmmp's data files, not hard-coded.
 4. **Vanilla is the reference, one-to-one.** Behaviour is correct when it
    matches the official Bedrock Dedicated Server (BDS) exactly, not when it
-   compiles and looks plausible. World generation, redstone, every other
-   vanilla mechanic and the world storage format must be one-to-one with
-   BDS; Helix is lenient only where the project lead says so.
+   compiles and looks plausible. World generation, redstone and every other
+   vanilla mechanic must be one-to-one with BDS; Helix is lenient only where
+   the project lead says so. Worlds are stored in Helix's own format, which
+   must convert losslessly to and from BDS worlds (`API_DESIGN.md`, "World
+   data redesign").
 
 ## Current status: core design decided, building
 
