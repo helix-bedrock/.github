@@ -559,11 +559,13 @@ or two reads:
 
 | Part | Holds | Read when |
 | --- | --- | --- |
-| Terrain | BDS chunk version, finalisation, sub chunks, biomes, height map, light | the chunk comes into view |
-| Objects | every block entity and entity shell | the chunk enters the simulation zone |
-| Ticks | scheduled and random block ticks | with Objects |
-| Extra | every other BDS chunk key (border blocks, spawn areas, blending, structure starts...), byte for byte | when the engine or the converter asks |
+| Terrain | sub chunks, biomes, height map, light (planned), and every small BDS chunk key (version, finalisation, border blocks, blending, structure starts...) byte for byte | the chunk comes into view |
+| Objects | every block entity and entity shell, and the scheduled and random block ticks | the chunk enters the simulation zone |
 | Payloads | the big fields cut out of shells, one record each | when used: a chest opened, an item picked up, an export |
+
+(Built 2026-11-13: Terrain, in `world/hx`, `terrain.go` and `chunk.go`. The
+small chunk keys sit in Terrain instead of a part of their own: they are a
+few bytes each and a separate record would cost a read for nothing.)
 
 - **Shells are cut by size, not by type:** a block entity or entity record's
   fields over a threshold (to start: 4 KB) move into payload records, largest
