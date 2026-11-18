@@ -18,7 +18,7 @@ Every mechanic is BDS's by default and can be replaced. Every feature is a modul
 plugins use, and even the engine's fundamentals can be replaced.
 
 > **Status: building** (as of 2026-11-12). Live progress, by feature: [helixbedrock.com/progress](https://helixbedrock.com/progress/).
-> Follow along in [Discussions](https://github.com/orgs/helix-bedrock/discussions).
+> Follow along in [Discussions](https://github.com/orgs/helix-bedrock/discussions) or chat with us on [Discord](https://discord.gg/Fbmc69Gqr7).
 
 Helix is **in early development and not ready for real servers yet**. The road to a stable release:
 
@@ -81,6 +81,7 @@ We are **actively looking for contributors**. If you know Go or Minecraft's mech
 
 ### Get involved
 
+- [Join the Discord](https://discord.gg/Fbmc69Gqr7): chat, get help, report bugs and see live progress
 - [Your first contribution, step by step](https://github.com/helix-bedrock/.github/blob/main/FIRST_CONTRIBUTION.md)
 - [Contributing guide](https://github.com/helix-bedrock/.github/blob/main/CONTRIBUTING.md)
 - [API design status](https://github.com/helix-bedrock/.github/blob/main/API_DESIGN.md)
