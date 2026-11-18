@@ -6,6 +6,8 @@
 <p align="center"><b>A source-available Minecraft: Bedrock Edition server engine, written in Go.</b><br>
 BDS, but better: the same mechanics, with access to everything from the lowest level to the highest.</p>
 
+<p align="center"><a href="https://discord.gg/Fbmc69Gqr7"><img src="https://img.shields.io/discord/1568071670097518763?label=discord&logo=discord&logoColor=white&color=5865F2" alt="Discord"></a></p>
+
 No Bedrock server software matches the official Bedrock Dedicated Server (BDS) one-to-one yet.
 Helix aims to be the first, and to run any kind of server.
 
