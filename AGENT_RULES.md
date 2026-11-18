@@ -75,6 +75,13 @@ when credited; the design comes from vanilla.
    [`PORTING.md`](PORTING.md): record the source repo, path,
    commit and license in `CREDITS.md` in the same change. Never paste
    decompiled Mojang code; use it only to understand behaviour.
+   **No internal BDS names in public code, docs or data files:** no
+   function addresses (`0xBCC9950`), no `sub_`/`xmmword_` names, no C++
+   symbols (`Player::getHeight`), no struct or vtable offsets, no IDA.
+   Write what the code does and that it matches BDS ("as BDS does",
+   "BDS's value"). Addresses and symbol names go only in private notes
+   (the workspace memory, Internal-Tools); `Internal-Tools/strip-refs`
+   finds and removes any that slip in.
 3. **No guessing vanilla.** Do not work from memory or the wiki for mechanics
    such as tick order, damage, drop rates or AI priorities. Use Mojang's
    `bedrock-samples` data, BDS behaviour, or a cited reference implementation,
