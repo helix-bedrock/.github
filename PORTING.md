@@ -1,6 +1,6 @@
 # Porting rules
 
-Helix reuses work from other open-source servers by translating their code to
+Helix may reuse work from other servers by translating their code to
 Go. Translating code is still copying it under copyright law, so every port
 must follow these rules.
 
@@ -11,14 +11,8 @@ must follow these rules.
 | [Dragonfly](https://github.com/df-mc/dragonfly) | Go | MIT | World, chunks, blocks, items, inventories | Any repo |
 | [gophertunnel](https://github.com/Sandertv/gophertunnel) | Go | MIT | Protocol, packets, login, encryption | Any repo |
 | [go-raknet](https://github.com/Sandertv/go-raknet) | Go | MIT (check before porting) | RakNet | Any repo |
-| [go-nethernet](https://github.com/df-mc/go-nethernet) | Go | Check before porting | NetherNet | Depends on license |
+| [go-nethernet](https://github.com/df-mc/go-nethernet) | Go | MIT (check before porting) | NetherNet | Any repo |
 | [Minestom](https://github.com/Minestom/Minestom) | Java | Apache-2.0 | Pathfinding ideas | Any repo (keep the NOTICE) |
-| [PowerNukkitX](https://github.com/PowerNukkitX/PowerNukkitX) | Java | LGPL-3.0 | Mob AI, villagers, structures, spawning, fluids, Nether/End | GPL-3.0 repos only |
-| [Allay](https://github.com/AllayMC/Allay) | Java | LGPL-3.0 | Blocks, redstone, AI framework | GPL-3.0 repos only |
-| [Nukkit-MOT](https://github.com/MemoriesOfTime/Nukkit-MOT) | Java | LGPL-3.0 | Enchanting, items, structures | GPL-3.0 repos only |
-| [Lumi](https://github.com/KoshakMineDEV/Lumi) | Java | LGPL-3.0 | Items, enchanting | GPL-3.0 repos only |
-| [PocketMine-MP](https://github.com/pmmp/PocketMine-MP) | PHP | LGPL-3.0 | Inventories, transactions | GPL-3.0 repos only |
-| [Pumpkin](https://github.com/Pumpkin-MC/Pumpkin) | Rust | GPL-3.0 | World generation, pathfinding, raids, combat | GPL-3.0 repos only |
 
 **Data sources** (loaded or converted, not ported as code):
 [Mojang/bedrock-samples](https://github.com/Mojang/bedrock-samples),
@@ -37,8 +31,10 @@ port from.
   understand behaviour, then write your own implementation. Do not paste it,
   translate it line by line, or ask an AI to reproduce it.
 - Code with no license (that means "all rights reserved").
-- Code under licenses incompatible with GPL-3.0 (for example, non-commercial
-  licenses).
+- GPL, LGPL, AGPL or any other copyleft code (PowerNukkitX, Allay,
+  Nukkit-MOT, Lumi, PocketMine-MP, Pumpkin and the like). Copyleft licenses
+  forbid Helix's noncommercial terms. You may read them to understand behaviour,
+  never copy or translate them.
 
 ## How to port
 
@@ -48,8 +44,8 @@ port from.
 3. **Keep the attribution.** Add a header comment to each ported file:
 
    ```go
-   // Ported from PowerNukkitX (LGPL-3.0):
-   // https://github.com/PowerNukkitX/PowerNukkitX/blob/<commit>/src/main/java/org/powernukkitx/entity/ai/executor/villager/SleepExecutor.java
+   // Ported from Dragonfly (MIT):
+   // https://github.com/df-mc/dragonfly/blob/<commit>/server/world/chunk/chunk.go
    ```
 
 4. **Record it in `CREDITS.md`** in the same PR:

@@ -3,7 +3,7 @@
   <img src="https://raw.githubusercontent.com/helix-bedrock/brand/main/helix-wordmark-dark.svg#gh-dark-mode-only" alt="Helix" width="420">
 </p>
 
-<p align="center"><b>An open-source Minecraft: Bedrock Edition server engine, written in Go.</b><br>
+<p align="center"><b>A source-available Minecraft: Bedrock Edition server engine, written in Go.</b><br>
 BDS, but better: the same mechanics, with access to everything from the lowest level to the highest.</p>
 
 No Bedrock server software matches the official Bedrock Dedicated Server (BDS) one-to-one yet.
@@ -76,7 +76,7 @@ We are **actively looking for contributors**. If you know Go or Minecraft's mech
 - **Fast on every core:** regions tick in parallel, and you choose how many cores Helix uses.
 - **Stable:** Go, no panics, and a strict no-allocation rule on hot paths.
 - **Data-driven:** game content loads from Mojang's own data files.
-- **Open:** GPL-3.0 engine, MIT libraries, AI-assisted contributions welcome under our
+- **Open:** free for noncommercial use (sell your plugins, never Helix), game behaviour re-engineered from BDS, AI-assisted contributions welcome under our
   [AI policy](https://github.com/helix-bedrock/.github/blob/main/AI_POLICY.md).
 
 ### Get involved

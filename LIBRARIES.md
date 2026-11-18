@@ -13,7 +13,7 @@ internals.
    `leveldb` using `nbt`). No dependency cycles.
 3. **Minimal third-party dependencies.** Standard library first. Each new
    dependency needs approval from 2 core maintainers, and must be maintained,
-   license-compatible and pure Go (no cgo).
+   permissively licensed (MIT, BSD, Apache-2.0) and pure Go (no cgo).
 
 ## API
 
@@ -54,9 +54,9 @@ internals.
 
 ## Licensing
 
-1. MIT by default, so anyone can use the library.
-2. **If the library contains code ported from a GPL or LGPL project, it must
-   be GPL-3.0.** Decide this before porting, not after.
+1. Every library uses the Helix license (PolyForm Noncommercial 1.0.0 plus
+   `ADDITIONAL-PERMISSIONS.md` and `NOTICE.md`), like the engine.
+2. **Never port GPL or LGPL code.** It cannot go under the Helix license.
 3. Every ported piece is recorded in `CREDITS.md` (see
    [`PORTING.md`](PORTING.md)).
 

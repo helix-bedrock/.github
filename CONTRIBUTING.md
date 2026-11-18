@@ -92,9 +92,14 @@ off is certifying this for the whole commit.
 
 ## Licensing
 
-- The engine (`helix`) and anything containing ported GPL/LGPL code is
-  **GPL-3.0**.
-- Standalone libraries are **MIT** unless they contain ported copyleft code.
+- Every Helix repo uses the same license: PolyForm Noncommercial 1.0.0 with
+  Helix's extra permissions (`LICENSE`, `ADDITIONAL-PERMISSIONS.md`,
+  `NOTICE.md`). Anyone may use Helix and run servers with it, even ones that
+  make money, and sell their own plugins; nobody may sell Helix or its code.
+- Helix's game behaviour is re-engineered from Minecraft's Bedrock Dedicated
+  Server; `NOTICE.md` credits Mojang for it.
+- Code first imported from MIT projects keeps its original license in
+  `licenses/` and is listed in `CREDITS.md`.
 - By contributing you agree your contribution is licensed under the license of
   the repo you contribute to.
 

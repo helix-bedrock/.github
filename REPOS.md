@@ -22,24 +22,24 @@ Only core maintainers create repos. Propose a new repo in a Discussion on
 
 | Repo | Kind | License | Purpose |
 |---|---|---|---|
-| `helix` | Engine | GPL-3.0 | The server: core, world, entities, AI, vanilla modules |
-| `helix-api` | API | MIT | Public plugin API (interfaces only), once designed |
+| `helix` | Engine | Helix | The server: core, world, entities, AI, vanilla modules |
+| `helix-api` | API | Helix | Public plugin API (interfaces only), once designed |
 | `helix-data` | Data | See notes | Generated game data and the scripts that build it |
-| `raknet` | Library | MIT | RakNet transport with full low-level hooks |
-| `nethernet` | Library | MIT | NetherNet (WebRTC) transport with full low-level hooks |
-| `protocol` | Library | MIT | Bedrock packets, encoding, login and encryption, for as many protocol versions as possible at once |
-| `nbt` | Library | MIT | NBT encoding and decoding |
-| `leveldb` | Library | MIT | Bedrock world format |
-| `worldgen` | Library | GPL-3.0 | Terrain, biomes, structures (contains ported GPL code) |
-| `pathfinding` | Library | GPL-3.0 if ported, else MIT | Mob pathfinding |
-| `redstone` | Library | MIT | Redstone circuits, one-to-one with BDS; the lead split it out of `helix` on 2026-11-03 |
-| `wasm-host` | Library | MIT | WASM plugin runtime |
-| `helix-cli` | Tool | GPL-3.0 | Command-line tool |
-| `helix-bench` | Tool | GPL-3.0 | Load and performance testing: bot players, scenarios, tick/memory/CPU reports, branch vs `main` comparison |
-| `plugin-template` | Template | MIT | Starter for plugin authors |
-| `docs`, `website` | Docs | CC-BY-4.0 (text), MIT (code) | Documentation and homepage |
+| `raknet` | Library | Helix | RakNet transport with full low-level hooks |
+| `nethernet` | Library | Helix | NetherNet (WebRTC) transport with full low-level hooks |
+| `protocol` | Library | Helix | Bedrock packets, encoding, login and encryption, for as many protocol versions as possible at once |
+| `nbt` | Library | Helix | NBT encoding and decoding |
+| `leveldb` | Library | Helix | Bedrock world format |
+| `worldgen` | Library | Helix | Terrain, biomes, structures |
+| `pathfinding` | Library | Helix | Mob pathfinding |
+| `redstone` | Library | Helix | Redstone circuits, one-to-one with BDS; the lead split it out of `helix` on 2026-11-03 |
+| `wasm-host` | Library | Helix | WASM plugin runtime |
+| `helix-cli` | Tool | Helix | Command-line tool |
+| `helix-bench` | Tool | Helix | Load and performance testing: bot players, scenarios, tick/memory/CPU reports, branch vs `main` comparison |
+| `plugin-template` | Template | Helix | Starter for plugin authors |
+| `docs`, `website` | Docs | Helix | Documentation and homepage |
 | `brand` | Assets | All rights reserved, usage rules in repo | Logos and colours |
-| `repo-template` | Template | MIT | Files every new repo starts from |
+| `repo-template` | Template | Helix | Files every new repo starts from |
 | `.github` | Org | CC-BY-4.0 | Profile page, community files, rules |
 
 `helix-data` notes: it contains data derived from Mojang and pmmp sources.
@@ -57,8 +57,8 @@ Follow each source's license and list them in its `CREDITS.md`.
 ## Creating a repo
 
 1. Create it from `helix-bedrock/repo-template` ("Use this template").
-2. Pick the license from [`licenses/`](https://github.com/helix-bedrock/repo-template/tree/main/licenses) in `repo-template`
-   and save it as `LICENSE`. Follow the table above.
+2. Keep `LICENSE`, `ADDITIONAL-PERMISSIONS.md` and `NOTICE.md` from
+   `repo-template` unchanged. Every repo uses the Helix license.
 3. Fill in `README.md`, `AGENTS.md` and `CODEOWNERS`.
 4. Run `go mod init github.com/helix-bedrock/<repo>`.
 5. Apply the settings below.
@@ -71,7 +71,7 @@ Every repo has:
 | File | Notes |
 |---|---|
 | `README.md` | What it is, status, install, minimal example |
-| `LICENSE` | Exactly one license |
+| `LICENSE`, `ADDITIONAL-PERMISSIONS.md`, `NOTICE.md` | The Helix license, unchanged |
 | `AGENTS.md` + `CLAUDE.md` | Repo-specific agent rules; `CLAUDE.md` imports both the repo and org rules |
 | `CREDITS.md` | Every ported source (see [`PORTING.md`](PORTING.md)); "None yet" if empty |
 | `.github/CODEOWNERS` | Who reviews which paths |

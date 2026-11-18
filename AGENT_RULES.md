@@ -10,7 +10,7 @@ for everything it produces. See [`AI_POLICY.md`](AI_POLICY.md).
 
 ## What Helix is
 
-An open-source Minecraft: Bedrock Edition server engine in Go, for any kind of
+A source-available Minecraft: Bedrock Edition server engine in Go, for any kind of
 server. A survival SMP can turn on all of vanilla; a Skyblock or minigame server
 can turn vanilla off, keep the fast core, and replace anything, down to the
 engine's fundamentals. The full goals are in [`API_DESIGN.md`](API_DESIGN.md).
@@ -66,9 +66,11 @@ when credited; the design comes from vanilla.
 
 ## Hard rules
 
-1. **Licenses.** The engine is GPL-3.0. Libraries are MIT unless they contain
-   ported copyleft code, in which case they are GPL-3.0. Never add code whose
-   license is incompatible with the repo it goes into.
+1. **Licenses.** Every repo is PolyForm Noncommercial 1.0.0 plus Helix's
+   extra permissions (`ADDITIONAL-PERMISSIONS.md`) and `NOTICE.md`, which
+   credits Mojang for the BDS behaviour Helix re-engineers. Only permissive
+   code (MIT, BSD, Apache-2.0) may be ported in; GPL and LGPL code never can,
+   because those licenses forbid the noncommercial terms.
 2. **Porting.** When you translate code from another project, follow
    [`PORTING.md`](PORTING.md): record the source repo, path,
    commit and license in `CREDITS.md` in the same change. Never paste
