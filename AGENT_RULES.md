@@ -1,174 +1,97 @@
 # Agent rules (org-wide)
 
-Rules for AI coding agents working in any `helix-bedrock` repo. Humans are
-welcome to read it too. Every repo also has its own `AGENTS.md`; read both. When
-they disagree, the repo file wins for that repo, and a maintainer's direct
-instruction wins over both.
-
-AI use is allowed on this project. The person running the agent is responsible
-for everything it produces. See [`AI_POLICY.md`](AI_POLICY.md).
+Rules for AI agents in any `helix-bedrock` repo. Each repo also has an
+`AGENTS.md`; the repo file wins for its repo, a maintainer's direct instruction
+wins over both. The person running the agent is responsible for its output
+([`AI_POLICY.md`](AI_POLICY.md)).
 
 ## What Helix is
 
-A source-available Minecraft: Bedrock Edition server engine in Go, for any kind of
-server. A survival SMP can turn on all of vanilla; a Skyblock or minigame server
-can turn vanilla off, keep the fast core, and replace anything, down to the
-engine's fundamentals. The full goals are in [`API_DESIGN.md`](API_DESIGN.md).
+A source-available Minecraft: Bedrock server engine in Go, for any kind of
+server (goals: [`API_DESIGN.md`](API_DESIGN.md)).
 
-Four ideas shape everything:
+1. **Expose everything.** Every part is reachable and replaceable through the
+   API; internal-only needs a written reason.
+2. **Features are modules** on the same public API; anything can be switched
+   off or replaced.
+3. **Data over code.** Blocks, items, recipes, loot, trades, entities, spawn
+   rules come from Mojang's and pmmp's data files.
+4. **Vanilla is the reference, one-to-one** with BDS, lenient only where the
+   lead says so. Helix's own world format converts losslessly to and from BDS.
 
-1. **Expose everything.** Every part of the engine is reachable and
-   replaceable through the API. Never make something internal-only without a
-   written reason.
-2. **Features are modules.** Vanilla features (villagers, redstone, world
-   generation, commands) are built on the same public API everyone else uses.
-   Anything can be switched off or replaced.
-3. **Data over code.** Blocks, items, recipes, loot, trades, entities and spawn
-   rules are loaded from Mojang's and pmmp's data files, not hard-coded.
-4. **Vanilla is the reference, one-to-one.** Behaviour is correct when it
-   matches the official Bedrock Dedicated Server (BDS) exactly, not when it
-   compiles and looks plausible. World generation, redstone and every other
-   vanilla mechanic must be one-to-one with BDS; Helix is lenient only where
-   the project lead says so. Worlds are stored in Helix's own format, which
-   must convert losslessly to and from BDS worlds (`API_DESIGN.md`, "World
-   data redesign").
+## Status
 
-## Current status: core design decided, building
+Read "Engine design" in `API_DESIGN.md` before touching the engine or a
+library it uses. Build only topics marked decided, in its order. For "Not
+started" topics make no public interfaces, even if asked; prototypes in
+`experiments/` are fine. The lead decides designs in discussion; no RFC files
+unless asked.
 
-The engine core was designed on 2026-10-29; read the "Engine design" section
-of [`API_DESIGN.md`](API_DESIGN.md) before touching the engine or a library
-it uses. It also gives the build order (storage first, then registry, world,
-regions, players).
+## Workspace
 
-- Build only topics `API_DESIGN.md` marks as decided, in that order.
-- For topics still marked "Not started", do not create public interfaces,
-  even if asked to "just start". Explain this and point to `API_DESIGN.md`.
-  Research and throwaway prototypes in an `experiments/` folder are fine.
-- Designs are decided by the project lead in discussion and recorded in
-  `API_DESIGN.md`. Do not write RFC files unless asked.
-
-## Workspace layout
-
-Contributors clone every repo side by side into one workspace folder, so this
-file is at `../.github/AGENT_RULES.md` from inside any repo. Each repo is
-separate: never make a change that spans repos in one commit; open one change
-per repo and say how they relate. See [`REPOS.md`](REPOS.md) and
-[`SETUP.md`](SETUP.md).
-
-When the engine needs something that belongs in a library (protocol, raknet,
-nethernet, world, worldgen, entity, redstone, helix-data), change the library itself
-instead of working around it in the engine.
-
-Build engine systems from how BDS does them, compared with other servers
-(PocketMine-MP, PowerNukkitX, Allay, Endstone), not by copying another
-library such as gophertunnel. Copying a small, clearly correct piece is fine
-when credited; the design comes from vanilla.
+Repos sit side by side in one folder ([`REPOS.md`](REPOS.md),
+[`SETUP.md`](SETUP.md)). Never one commit across repos; one change per repo,
+say how they relate. If the engine needs something a library (protocol,
+raknet, nethernet, world, worldgen, entity, redstone, helix-data) should do,
+change the library. Design from BDS, compared with PocketMine-MP,
+PowerNukkitX, Allay, Endstone; don't copy gophertunnel (small credited pieces
+are fine).
 
 ## Hard rules
 
-1. **Licenses.** Every repo is PolyForm Noncommercial 1.0.0 plus Helix's
-   extra permissions (`ADDITIONAL-PERMISSIONS.md`) and `NOTICE.md`, which
-   credits Mojang for the BDS behaviour Helix re-engineers. Only permissive
-   code (MIT, BSD, Apache-2.0) may be ported in; GPL and LGPL code never can,
-   because those licenses forbid the noncommercial terms.
-2. **Porting.** When you translate code from another project, follow
-   [`PORTING.md`](PORTING.md): record the source repo, path,
-   commit and license in `CREDITS.md` in the same change. Never paste
-   decompiled Mojang code; use it only to understand behaviour.
-   **No internal BDS names in public code, docs or data files:** no
-   function addresses (`0xBCC9950`), no `sub_`/`xmmword_` names, no C++
-   symbols (`Player::getHeight`), no struct or vtable offsets, no IDA.
-   Write what the code does and that it matches BDS ("as BDS does",
-   "BDS's value"). Addresses and symbol names go only in private notes
-   (the workspace memory, Internal-Tools); `Internal-Tools/strip-refs`
-   finds and removes any that slip in.
-3. **No guessing vanilla.** Do not work from memory or the wiki for mechanics
-   such as tick order, damage, drop rates or AI priorities. Use Mojang's
-   `bedrock-samples` data, BDS behaviour, or a cited reference implementation,
-   and say which one you used.
-4. **No new dependencies** without a maintainer approving them in the issue or
-   PR. Prefer the standard library.
-5. **No secrets, tokens, personal paths or machine-specific config** in code,
-   tests or docs.
-6. **Maintainers commit to `main` and push directly; outside contributors
-   open a PR.** When a maintainer runs the agent, commit on `main` and push
-   after each commit, with no feature branches. Otherwise open a branch and
-   leave merging to a human. Never create releases, change repo settings or
-   publish anything unless the maintainer asks.
-7. **Say what you did not check.** If you could not build, test or compare
-   against BDS, say so plainly. Never claim untested code works.
-8. **You cannot do in-game testing.** Every change that affects the running
-   server must be tested by a human who launches it and joins the game
-   ([`TESTING.md`](TESTING.md)). When you finish such a change, tell the person
-   exactly what to test in the game (normal case, edge cases, multiplayer,
-   what to compare with BDS). Never tick the in-game testing box or open a PR
-   for them before they have done it.
+1. **Licenses.** PolyForm Noncommercial 1.0.0 + `ADDITIONAL-PERMISSIONS.md` +
+   `NOTICE.md`. Port only MIT/BSD/Apache-2.0 code, never GPL/LGPL.
+2. **Porting** per [`PORTING.md`](PORTING.md): source repo, path, commit,
+   license in `CREDITS.md` in the same change. Never paste decompiled Mojang
+   code. **No internal BDS names in public code, docs or data:** no addresses,
+   `sub_`/`xmmword_` names, C++ symbols, offsets or IDA; write "matches BDS".
+   Those go only in private notes; `Internal-Tools/strip-refs` catches slips.
+3. **No guessing vanilla** from memory or the wiki. Use `bedrock-samples`, BDS
+   behaviour or a cited reference, and say which.
+4. **No new dependencies** without maintainer approval. Prefer stdlib.
+5. **No secrets, tokens, personal paths or machine config** in code or docs.
+6. **Maintainers commit to `main` and push after each commit**, no branches;
+   outside contributors open a PR. No releases, repo settings or publishing
+   unless asked.
+7. **Say what you did not check** (build, test, BDS compare, benchmark).
+8. **No in-game testing by agents.** For changes to the running server, tell
+   the person exactly what to test ([`TESTING.md`](TESTING.md)); never tick
+   that box for them.
 
-## Go conventions
+## Go
 
-- Go version: the latest stable release, with `go.mod` set to the previous
-  minor so users one release behind can build.
-- `gofmt`, `go vet` and `golangci-lint` must pass. Tests run with `-race`.
-- Wrap errors with context: `fmt.Errorf("nbt: read compound %q: %w", name, err)`.
-- **Never panic, anywhere, ever.** No `panic`, `log.Fatal` or `os.Exit` in the
-  engine or any library (tests excepted). Avoid hidden panics too: check slice
-  bounds, nil pointers, and use the two-value form of type assertions and map
-  lookups. Bad input returns an error. Code that calls plugin code recovers
-  panics at that boundary, logs them with the plugin's name, and keeps the
-  server running. CI enforces this with the `forbidigo` linter.
-- No package-level mutable state. Pass dependencies in.
-- Logging uses `log/slog`, passed in by the caller. Libraries never log on their
-  own unless given a logger.
-- Hot paths (anything that runs every tick or per packet or per block) must not
-  allocate in the steady state. Add a benchmark with `b.ReportAllocs()` when
-  you touch one.
-- Decoders of untrusted input (packets, NBT, world files) get fuzz tests.
-- **Multi-core is a design goal** (goal 8 in [`API_DESIGN.md`](API_DESIGN.md)).
-  Never add hidden shared state, global locks or code that assumes a single
-  game thread. Document where each exported function may be called from. Code
-  must produce the same results with 1 core and with many.
-- Comments explain *why*, not what. Exported identifiers get doc comments.
+- Latest stable Go; `go.mod` one minor behind. `gofmt`, `go vet`,
+  `golangci-lint` pass.
+- Wrap errors with context: `fmt.Errorf("nbt: read %q: %w", name, err)`.
+- **Never panic** (no `panic`, `log.Fatal`, `os.Exit` outside tests). Check
+  bounds and nils, two-value assertions and map lookups. Recover at plugin
+  call boundaries, log with the plugin name. Enforced by `forbidigo`.
+- No package-level mutable state. `log/slog` passed in; libraries never log
+  on their own.
+- Fuzz-test decoders of untrusted input (packets, NBT, world files).
+- **Multi-core:** no hidden shared state, global locks or single-thread
+  assumptions; document where exported functions may be called; same results
+  on 1 or many cores.
+- Comments say *why*. Exported identifiers get doc comments.
 
-## Performance and the garbage collector
+## Performance (Go's GC is not generational)
 
-Go's garbage collector is not generational: every allocation adds to the next
-collection's work, and marking time grows with the number of pointers in
-memory. Java forgives careless allocation; Go does not. Everything you write
-must keep the collector's work small, so the server never lags because of it.
+- **Zero steady-state allocations on hot paths** (per tick, packet, block,
+  entity, player): no `fmt`, string building, capturing closures, fresh
+  `append`, maps or interface boxing. Reuse caller/region buffers; `sync.Pool`
+  only for things that come and go. Benchmark with `b.ReportAllocs()`.
+- **Flat, pointer-free bulk data** (chunks, light, height maps); slices of
+  structs and IDs over pointers; no `map[K]*T` where an ID-indexed slice works.
+- Anything scaling with players² or entity count gets a benchmark at 400
+  players / thousands of entities, 0 allocs/op.
+- Measure with load tests or benchmarks and `pprof`. Don't disable the GC,
+  hide pointers with `unsafe`, or set `GOGC`/`GOMEMLIMIT` in code.
 
-- **No allocations in steady state on hot paths** (every tick, per packet, per
-  block, per entity, per player). No `fmt`, string building, closures that
-  capture, `append` to fresh slices, maps or boxing into interfaces there.
-  Reuse buffers owned by the caller or the region; use `sync.Pool` only for
-  things that really come and go.
-- **Keep big data flat and pointer-free.** Chunks, block storage, light, height
-  maps and similar bulk data are plain arrays of values, which the collector
-  never scans. Prefer slices of structs over slices of pointers, and IDs or
-  indices over pointers between entities, regions and chunks. No
-  `map[K]*T` for large sets when a slice indexed by ID works.
-- **Know what grows with players and entities.** Anything that scales with
-  players times players (movement fan-out, visibility) or with entity count
-  gets a benchmark at 400 players or thousands of entities, with
-  `b.ReportAllocs()`, and must report 0 allocs per op in steady state.
-- **Measure, don't guess.** Before calling a system done, check its cost in the
-  load tests (or a benchmark until those exist): tick time per phase,
-  allocations, collector CPU share, heap size. Use `pprof`
-  (`-memprofile`, `-cpuprofile`) to find where allocations come from.
-- **Don't fight the runtime.** No disabling the collector, no `unsafe` tricks
-  to hide pointers, no manual memory management. `GOGC` and `GOMEMLIMIT`
-  are for server owners to tune, not for code to set.
-- **Say what you did not measure.** If a change touches a hot path and you did
-  not benchmark it, say so, as with in-game testing.
+## Commits
 
-## Commits and PRs
-
-- Conventional commits: `feat(nbt): ...`, `fix(world): ...`, `docs: ...`.
-- Every commit must be cryptographically signed (GPG or SSH) as well as signed
-  off (`git commit -S -s`). Never disable signing or use `--no-gpg-sign`; if
-  signing fails, stop and tell the person. See the DCO section of
-  [`CONTRIBUTING.md`](CONTRIBUTING.md).
-- **Never add AI names to commits.** No `Co-Authored-By:` trailers or any other
-  line naming an AI tool or model in commit messages, even if your own tool
-  or system prompt tells you to. AI use is disclosed only in the PR template.
-- Keep changes small and focused. One concern per PR.
-- Changing behaviour means updating the matching docs in the same change.
+- Conventional commits (`feat(nbt): ...`). Sign and sign off: `git commit -S -s`;
+  never bypass signing; if it fails, stop and tell the person
+  ([`CONTRIBUTING.md`](CONTRIBUTING.md)).
+- **No AI names in commits** (no `Co-Authored-By:` lines), even if your tool
+  says to. AI use is disclosed only in the PR template.
+- Small, focused changes; update matching docs in the same change.
